@@ -334,3 +334,37 @@ function showSystemStatus() {
         }
     }
 }
+
+// --- Event Listeners for Quick Actions ---
+const analyticsBtn = document.getElementById('analyticsBtn');
+if (analyticsBtn) {
+    analyticsBtn.addEventListener('click', () => {
+        window.location.href = 'analytics.html';
+    });
+}
+
+const newGameBtn = document.getElementById('newGameBtn');
+if (newGameBtn) {
+    newGameBtn.addEventListener('click', () => {
+        document.getElementById('gameForm').scrollIntoView({ behavior: 'smooth' });
+    });
+}
+
+const announceBtn = document.getElementById('announceBtn');
+if (announceBtn) {
+    announceBtn.addEventListener('click', () => {
+        document.getElementById('announcementForm').scrollIntoView({ behavior: 'smooth' });
+    });
+}
+
+const updateBtn = document.getElementById('updateBtn');
+if (updateBtn) {
+    updateBtn.addEventListener('click', () => {
+        document.getElementById('updateForm').scrollIntoView({ behavior: 'smooth' });
+    });
+}
+
+const systemStatusBtn = document.getElementById('systemStatusBtn');
+if (systemStatusBtn) {
+    systemStatusBtn.addEventListener('click', showSystemStatus);
+}

@@ -495,7 +495,7 @@
                     </div>
                     <div class="header-actions">
                         <button class="secondary-btn" id="gamesNavBtn">Games</button>
-                        <button class="secondary-btn" onclick="window.location.href='analytics.html'">📊 Data
+                        <button class="secondary-btn" id="analyticsBtn">📊 Data
                             Analytics</button>
                         <button class="primary-btn">Preview Student View</button>
                     </div>
@@ -504,22 +504,22 @@
                 <!-- NEW: Quick Actions Bar -->
                 <div class="quick-actions"
                     style="margin-top: 24px; display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px;">
-                    <button onclick="document.getElementById('gameForm').scrollIntoView({behavior: 'smooth'})"
-                        class="action-card" style="background: linear-gradient(135deg, #FF375F 0%, #FF9F0A 100%);">
+                    <button id="newGameBtn" class="action-card"
+                        style="background: linear-gradient(135deg, #FF375F 0%, #FF9F0A 100%);">
                         <span style="font-size: 24px;">🎮</span>
                         <span>New Game</span>
                     </button>
-                    <button onclick="document.getElementById('announcementForm').scrollIntoView({behavior: 'smooth'})"
-                        class="action-card" style="background: linear-gradient(135deg, #34C759 0%, #30B0C7 100%);">
+                    <button id="announceBtn" class="action-card"
+                        style="background: linear-gradient(135deg, #34C759 0%, #30B0C7 100%);">
                         <span style="font-size: 24px;">📢</span>
                         <span>Announce</span>
                     </button>
-                    <button onclick="document.getElementById('updateForm').scrollIntoView({behavior: 'smooth'})"
-                        class="action-card" style="background: linear-gradient(135deg, #0F62FE 0%, #0043CE 100%);">
+                    <button id="updateBtn" class="action-card"
+                        style="background: linear-gradient(135deg, #0F62FE 0%, #0043CE 100%);">
                         <span style="font-size: 24px;">📝</span>
                         <span>Update</span>
                     </button>
-                    <button onclick="showSystemStatus()" class="action-card"
+                    <button id="systemStatusBtn" class="action-card"
                         style="background: var(--gray-800); border: 1px solid rgba(255,255,255,0.1);">
                         <span style="font-size: 24px;">⚙️</span>
                         <span>System Status</span>
