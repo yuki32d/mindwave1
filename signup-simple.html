@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up</title>
+  <style>
+    body { margin:0; font-family: Inter, Segoe UI, Arial, sans-serif; display:flex; min-height:100vh; align-items:center; justify-content:center; background:#0b0d16; color:#fff; }
+    .card { width:min(480px, 92vw); background:#121524; border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:14px; }
+    h1 { font-size:22px; margin:0 0 6px; }
+    .row { display:flex; gap:8px; }
+    .role { flex:1; display:flex; align-items:center; gap:6px; border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:8px 12px; background:#171a2f; }
+    label { font-size:13px; color:#c7cbe2; }
+    input { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:#171a2f; color:#fff; font-size:14px; }
+    button { padding:12px; border-radius:12px; border:none; background:#3466ff; color:#fff; font-weight:600; cursor:pointer; }
+    a { color:#9fb2ff; text-decoration:none; font-size:13px; }
+    .actions { display:flex; justify-content:space-between; align-items:center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Create account</h1>
+    <div class="row">
+      <div class="role"><input type="radio" name="role" value="student" id="r-stu" checked><label for="r-stu">Student</label></div>
+      <div class="role"><input type="radio" name="role" value="admin" id="r-adm"><label for="r-adm">Admin</label></div>
+    </div>
+    <label for="name">Full name</label>
+    <input id="name" type="text" placeholder="Full name">
+    <label for="email">Campus email</label>
+    <input id="email" type="email" placeholder="student.mca25@cmrit.ac.in">
+    <label for="password">Password</label>
+    <input id="password" type="password" placeholder="Create a password">
+    <button id="signupBtn">Create account</button>
+    <div class="actions">
+      <span></span>
+      <a href="login-simple.html">Already have an account?</a>
+    </div>
+  </div>
+  <script>
+    let API_BASE = window.location.origin;
+    (async () => {
+      if (window.location.protocol === 'file:') {
+        const host = '127.0.0.1';
+        const ports = [8080,8081,8082,8083,8084];
+        for (const p of ports) {
+          try { const r = await fetch(`http://${host}:${p}/`); if (r.ok) { API_BASE = `http://${host}:${p}`; break; } } catch {}
+        }
+      }
+    })();
+    const STUDENT_EMAIL_REGEX = /\.mca25@cmrit\.ac\.in$/i;
+    const ADMIN_EMAIL_REGEX = /\.mca@cmrit\.ac\.in$/i;
+    function updatePlaceholder() {
+      const role = document.querySelector('input[name="role"]:checked').value;
+      const el = document.getElementById('email');
+      el.placeholder = role === 'student' ? 'student.mca25@cmrit.ac.in' : 'admin.mca@cmrit.ac.in';
+    }
+    document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', updatePlaceholder));
+    updatePlaceholder();
+    document.getElementById('signupBtn').addEventListener('click', async () => {
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim().toLowerCase();
+      const password = document.getElementById('password').value.trim();
+      const role = document.querySelector('input[name="role"]:checked').value;
+      if (!name || !email || !password) { alert('All fields are required'); return; }
+      const ok = role === 'admin' ? ADMIN_EMAIL_REGEX.test(email) : STUDENT_EMAIL_REGEX.test(email);
+      if (!ok) { alert('Use your campus email'); return; }
+      try {
+        const res = await fetch(`${API_BASE}/api/signup`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ name, email, password, role }) });
+        const data = await res.json();
+        if (!data.ok) { alert(data.message || 'Unable to sign up'); return; }
+        alert('Sign up successful');
+        window.location.href = 'login-simple.html';
+      } catch { alert('Unable to sign up'); }
+    });
+  </script>
+</body>
+</html>

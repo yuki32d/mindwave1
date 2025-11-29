@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDWAVE – Creator Hub</title>
+    <style>
+        :root {
+            --blue: #0f62fe;
+            --dark: #050507;
+            --gray-950: #0b0d15;
+            --gray-900: #111319;
+            --gray-800: #1c1f26;
+            --gray-700: #2a2e39;
+            --text-primary: #f5f7ff;
+            --text-muted: #9ea4b6;
+            --accent-green: #34c759;
+            --accent-orange: #ff9f0a;
+            --accent-pink: #ff375f;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --transition: 220ms ease;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background: var(--dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .app-shell {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header.topbar {
+            height: 64px;
+            padding: 0 32px;
+            background: var(--blue);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 16px;
+            font-size: 20px;
+            position: relative;
+            align-items: center;
+        }
+
+        .profile-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.15);
+            font-size: 14px;
+        }
+
+        .profile-toggle span {
+            font-size: 18px;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: #151722;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            min-width: 160px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 30;
+        }
+
+        .profile-dropdown a,
+        .profile-dropdown button {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            text-align: left;
+            padding: 12px 16px;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .profile-dropdown a:hover,
+        .profile-dropdown button:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .layout {
+            flex: 1;
+            display: flex;
+        }
+
+        nav.sidebar {
+            width: 240px;
+            background: var(--gray-950);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .team-card {
+            padding: 18px;
+            background: var(--gray-900);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .team-card h4 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .team-card span {
+            display: inline-flex;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .menu a {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background var(--transition), color var(--transition);
+            text-decoration: none;
+        }
+
+        .menu li.active a,
+        .menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ghost-btn {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: inherit;
+            border-radius: 14px;
+            padding: 10px 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        main {
+            flex: 1;
+            padding: 32px 48px;
+            background: linear-gradient(180deg, #06070c 0%, #0f1117 100%);
+            overflow-y: auto;
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .main-header h1 {
+            margin: 0;
+            font-size: 32px;
+        }
+
+        .primary-btn {
+            background: #fff;
+            color: #0b0d15;
+            padding: 12px 22px;
+            border-radius: 999px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(15, 98, 254, 0.35);
+        }
+
+        .secondary-btn {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background var(--transition), transform var(--transition);
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-1px);
+        }
+
+        .grid {
+            display: grid;
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .grid.two {
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        }
+
+        .panel {
+            background: var(--gray-900);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+        }
+
+        .panel.full-span {
+            grid-column: 1 / -1;
+        }
+
+        .panel h2 {
+            margin: 0 0 12px;
+            font-size: 20px;
+        }
+
+        .panel p {
+            margin: 0 0 18px;
+            color: var(--text-muted);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        label {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            background: var(--gray-800);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px;
+            font: inherit;
+            color: inherit;
+            resize: vertical;
+        }
+
+        textarea {
+            min-height: 120px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .submit-btn {
+            background: var(--blue);
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .pill-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .pill-stat {
+            flex: 1;
+            min-width: 180px;
+            background: var(--gray-800);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .pill-stat h3 {
+            margin: 0 0 4px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .pill-stat strong {
+            font-size: 24px;
+            letter-spacing: -0.02em;
+        }
+
+        .list {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .list-item {
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .list-item h4 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .list-item small {
+            color: var(--text-muted);
+        }
+
+        .tag {
+            display: inline-flex;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .tag.green {
+            background: rgba(52, 199, 89, 0.16);
+            color: var(--accent-green);
+        }
+
+        .tag.orange {
+            background: rgba(255, 159, 10, 0.18);
+            color: var(--accent-orange);
+        }
+
+        .tag.pink {
+            background: rgba(255, 55, 95, 0.18);
+            color: var(--accent-pink);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .game-template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+
+        .game-template-card {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            transition: transform var(--transition), border var(--transition);
+        }
+
+        .game-template-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .game-template-card h3 {
+            margin: 12px 0 6px;
+            font-size: 18px;
+        }
+
+        .game-template-card p {
+            margin: 0;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .template-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            nav.sidebar {
+                display: none;
+            }
+
+            main {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div>MindwaveIo Creator Hub</div>
+            <div class="topbar-actions">
+                <span>🔔</span>
+                <div class="profile-toggle" id="adminProfileToggle">
+                    <span>👤</span>
+                    <small>Account</small>
+                </div>
+                <div class="profile-dropdown" id="adminProfileDropdown">
+                    <a href="faculty-settings.html">Profile</a>
+                    <button type="button" id="signOutControl">Sign out</button>
+                </div>
+            </div>
+        </header>
+        <div class="layout">
+            <nav class="sidebar">
+                <div class="team-card">
+                    <h4>MindwaveIo Faculty</h4>
+                    <span>Admin Access</span>
+                </div>
+                <ul class="menu">
+                    <li class="active"><a href="admin.html">🛠 Creator Tools</a></li>
+                    <li><a href="faculty-dashboard.html">🏠 Dashboard</a></li>
+                    <li><a href="faculty-dataanalytics.html">📊 Data Analytics</a></li>
+                    <li><a href="faculty-courses.html">📚 Courses</a></li>
+                    <li><a href="faculty-community.html">📊 Community</a></li>
+                    <li><a href="faculty-settings.html">⚙️ Settings</a></li>
+                </ul>
+                <div class="sidebar-footer">
+                    <a class="ghost-btn" href="faculty-help.html">❔ Help Center</a>
+                </div>
+            </nav>
+            <main>
+                <div class="main-header">
+                    <div>
+                        <h1>Creator Workspace</h1>
+                        <p style="color: var(--text-muted); margin: 4px 0 0;">Plan announcements, updates, and playful
+                            learning tools.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="secondary-btn" id="gamesNavBtn">Games</button>
+                        <button class="secondary-btn" onclick="window.location.href='analytics.html'">📊 Data
+                            Analytics</button>
+                        <button class="primary-btn">Preview Student View</button>
+                    </div>
+                </div>
+
+                <!-- NEW: Quick Actions Bar -->
+                <div class="quick-actions"
+                    style="margin-top: 24px; display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px;">
+                    <button onclick="document.getElementById('gameForm').scrollIntoView({behavior: 'smooth'})"
+                        class="action-card" style="background: linear-gradient(135deg, #FF375F 0%, #FF9F0A 100%);">
+                        <span style="font-size: 24px;">🎮</span>
+                        <span>New Game</span>
+                    </button>
+                    <button onclick="document.getElementById('announcementForm').scrollIntoView({behavior: 'smooth'})"
+                        class="action-card" style="background: linear-gradient(135deg, #34C759 0%, #30B0C7 100%);">
+                        <span style="font-size: 24px;">📢</span>
+                        <span>Announce</span>
+                    </button>
+                    <button onclick="document.getElementById('updateForm').scrollIntoView({behavior: 'smooth'})"
+                        class="action-card" style="background: linear-gradient(135deg, #0F62FE 0%, #0043CE 100%);">
+                        <span style="font-size: 24px;">📝</span>
+                        <span>Update</span>
+                    </button>
+                    <button onclick="showSystemStatus()" class="action-card"
+                        style="background: var(--gray-800); border: 1px solid rgba(255,255,255,0.1);">
+                        <span style="font-size: 24px;">⚙️</span>
+                        <span>System Status</span>
+                    </button>
+                </div>
+
+                <style>
+                    .action-card {
+                        flex: 1;
+                        min-width: 140px;
+                        height: 100px;
+                        border: none;
+                        border-radius: 16px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                        color: white;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: transform 0.2s;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                    }
+
+                    .action-card:hover {
+                        transform: translateY(-4px);
+                    }
+                </style>
+
+                <div class="pill-row" style="margin-top: 28px;">
+                    <div class="pill-stat">
+                        <h3>Active Campaigns</h3>
+                        <strong id="campaignCount">0</strong>
+                        <div class="tag green">Announcements</div>
+                    </div>
+                    <div class="pill-stat">
+                        <h3>Engagement Pulse</h3>
+                        <strong>87%</strong>
+                        <div class="tag orange">Last 7 days</div>
+                    </div>
+                    <div class="pill-stat">
+                        <h3>Games Published</h3>
+                        <strong id="gamesCount">0</strong>
+                        <div class="tag pink">Interactive</div>
+                    </div>
+                </div>
+
+                <div class="grid two">
+                    <section class="panel">
+                        <h2>📢 Publish Announcement</h2>
+                        <p>Share news, reminders, or course-wide updates with every learner.</p>
+                        <form id="announcementForm">
+                            <div>
+                                <label for="announcementTitle">Title</label>
+                                <input id="announcementTitle" required placeholder="e.g., Sprint Week Kickoff">
+                            </div>
+                            <div>
+                                <label for="announcementAudience">Audience</label>
+                                <select id="announcementAudience" required>
+                                    <option value="All Students">All Students</option>
+                                    <option value="Cohort Alpha">Cohort Alpha</option>
+                                    <option value="Cohort Beta">Cohort Beta</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="announcementBody">Message</label>
+                                <textarea id="announcementBody" required
+                                    placeholder="Add context, timeline, and CTA..."></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button class="submit-btn" type="submit">Publish</button>
+                            </div>
+                        </form>
+                        <div class="list" id="announcementList"></div>
+                    </section>
+
+                    <section class="panel">
+                        <h2>📝 Post Update</h2>
+                        <p>Log release notes, classroom reflections, or weekly digests.</p>
+                        <form id="updateForm">
+                            <div>
+                                <label for="updateHeadline">Headline</label>
+                                <input id="updateHeadline" required placeholder="e.g., Week 4 Progress Snapshot">
+                            </div>
+                            <div>
+                                <label for="updateSummary">Summary</label>
+                                <textarea id="updateSummary" required
+                                    placeholder="Key highlights, blockers, next steps..."></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button class="submit-btn" type="submit">Post Update</button>
+                            </div>
+                        </form>
+                        <div class="list" id="updateList"></div>
+                    </section>
+
+                    <section class="panel">
+                        <h2>🎮 Design Learning Game</h2>
+                        <p>Ship playful challenges that keep students practicing with intention.</p>
+                        <form id="gameForm">
+                            <div>
+                                <label for="gameTitle">Game Title</label>
+                                <input id="gameTitle" required placeholder="e.g., Concept Match Arena">
+                            </div>
+                            <div>
+                                <label for="gameType">Game Type</label>
+                                <select id="gameType" required>
+                                    <option value="">Select format</option>
+                                    <option value="Anagram">Anagram</option>
+                                    <option value="Spin the Wheel">Spin the Wheel</option>
+                                    <option value="Quiz Battle">Quiz Battle</option>
+                                    <option value="Matching Pairs">Matching Pairs</option>
+                                    <option value="Open the Box">Open the Box</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="gameDifficulty">Difficulty</label>
+                                <select id="gameDifficulty" required>
+                                    <option value="Beginner">Beginner</option>
+                                    <option value="Intermediate">Intermediate</option>
+                                    <option value="Advanced">Advanced</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="gameBrief">Creative Brief</label>
+                                <textarea id="gameBrief" required
+                                    placeholder="What skills are reinforced? What assets are needed?"></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button class="submit-btn" type="submit">Launch Game</button>
+                            </div>
+                        </form>
+                        <div class="list" id="gameList"></div>
+                    </section>
+
+                    <section class="panel">
+                        <h2>📎 Shared Assets</h2>
+                        <p>Upload supporting resources or embed quick references.</p>
+                        <div class="list">
+                            <div class="list-item">
+                                <h4>Design Playbook</h4>
+                                <small>Updated 2 days ago • PDF</small>
+                            </div>
+                            <div class="list-item">
+                                <h4>Trivia Question Bank</h4>
+                                <small>Shared by Alex • Google Sheet</small>
+                            </div>
+                            <div class="list-item">
+                                <h4>Campus Event Kit</h4>
+                                <small>Poster templates &amp; copy snippets</small>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="panel full-span" id="gamesPanel">
+                        <h2>🧩 Game Templates Gallery</h2>
+                        <style>
+                            .game-template-card.selected {
+                                border-color: var(--blue);
+                                background: rgba(15, 98, 254, 0.1);
+                                transform: translateY(-2px);
+                            }
+                        </style>
+                        <p>Choose a blueprint, then customize the prompts and logistics. Tap a card to pre-fill the
+                            builder.</p>
+                        <div class="game-template-grid" id="gameTemplateGrid"></div>
+                    </section>
+                </div>
+                <section class="panel" style="margin-top: 24px;">
+                    <h2>⚙️ Advanced Game Tools</h2>
+                    <p>Attach supporting assets or embed external tools for richer interactions.</p>
+                    <form id="gameToolsForm">
+                        <div class="form-actions"
+                            style="justify-content: flex-start; flex-direction: column; gap: 14px; width: 100%;">
+                            <label for="assetLink">Asset or Deck URL</label>
+                            <input type="url" id="assetLink" placeholder="https://example.com/game-assets" required>
+                            <label for="instructions">Facilitator Notes</label>
+                            <textarea id="instructions"
+                                placeholder="Share timing, scoring rules, or facilitation tips..." rows="4"
+                                required></textarea>
+                        </div>
+                        <div class="form-actions" style="margin-top: 12px;">
+                            <button class="submit-btn" type="submit">Attach Tool</button>
+                        </div>
+                    </form>
+                    <div class="list" id="gameToolsList" style="margin-top: 16px;"></div>
+                </section>
+            </main>
+        </div>
+    </div>
+    <script>
+        const announcementsKey = 'announcements';
+        const updatesKey = 'mindwave_updates';
+        const gamesKey = 'mindwave_games';
+        const gameToolsKey = 'mindwave_game_tools';
+        const GAME_LIBRARY = [
+            { icon: '🐛', title: 'Debug the Monolith', description: 'Find the bug in the code snippet.', brief: 'Identify logic errors, syntax bugs, or runtime issues in real code.', type: 'bug-hunt' },
+            { icon: '❓', title: 'Quiz', description: 'Multiple choice blitz with instant feedback.', brief: '5-question pulse check on lecture concepts.', type: 'trivia-challenge' },
+            { icon: '🃏', title: 'Flash cards', description: 'Prompt on the front, answer on the back.', brief: 'Build card deck for revision sprints.', type: 'memory-match' },
+            { icon: '🎡', title: 'Spin the wheel', description: 'Randomize the next topic or challenge.', brief: 'Assign teams to a random debugging prompt.', type: 'brain-teasers' },
+            { icon: '🗣️', title: 'Speaking cards', description: 'Deal prompts from a shuffled stack.', brief: 'Async speaking practice or stand-up topics.', type: 'strategy-games' },
+            { icon: '🗂️', title: 'Tech Stack Sorter', description: 'Categorize technologies (Frontend vs Backend).', brief: 'Sort frameworks and libraries into correct stacks.', type: 'logic-games' },
+            { icon: '🔍', title: 'Find the match', description: 'Eliminate answers until all tiles clear.', brief: 'Match issue tickets to fixes.', type: 'memory-match' },
+            { icon: '⌨️', title: 'Syntax Fill-in', description: 'Drag keywords into code blanks.', brief: 'Test mastery of async/await or class syntax.', type: 'word-puzzle' },
+            { icon: '🔤', title: 'Anagram', description: 'Unscramble letters to reveal key terms.', brief: 'Reinforce terminology with playful anagrams.', type: 'word-puzzle' },
+            { icon: '🧩', title: 'Code Logic Unjumble', description: 'Reorder lines to fix the algorithm.', brief: 'Sequence logic for Binary Search or API calls.', type: 'logic-games' },
+            { icon: '🕸️', title: 'SQL Query Builder', description: 'Drag blocks to build valid queries.', brief: 'Construct complex JOINs and subqueries.', type: 'brain-teasers' },
+            { icon: '🧠', title: 'Matching pairs', description: 'Flip tiles to find every pair.', brief: 'Match bug reports with owners.', type: 'memory-match' }]
+        const announcementForm = document.getElementById('announcementForm');
+        const updateForm = document.getElementById('updateForm');
+        const gameForm = document.getElementById('gameForm');
+
+        function loadData(key) {
+            try {
+                return JSON.parse(localStorage.getItem(key) || '[]');
+            } catch (error) {
+                console.error('Failed to parse data for', key, error);
+                return [];
+            }
+        }
+
+        function saveData(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        function renderList(containerId, items, formatter) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = items.length === 0
+                ? '<p style="color: var(--text-muted); margin: 0;">No entries yet.</p>'
+                : items.map(formatter).join('');
+        }
+
+        function formatDate() {
+            return new Date().toLocaleString();
+        }
+
+        function updateCounters() {
+            const announcements = loadData(announcementsKey);
+            document.getElementById('campaignCount').textContent = announcements.length;
+            const games = loadData(gamesKey);
+            document.getElementById('gamesCount').textContent = games.length;
+        }
+
+        function renderAnnouncements() {
+            const announcements = loadData(announcementsKey).slice().reverse();
+            renderList('announcementList', announcements, (item) => `
+                <div class="list-item">
+                    <h4>${item.title || 'Untitled Announcement'}</h4>
+                    <small>${item.audience} • ${item.date}</small>
+                    <p style="margin-top: 8px;">${item.body}</p>
+                    <div class="tag green">Published</div>
+                </div>
+            `);
+        }
+
+        function renderUpdates() {
+            const updates = loadData(updatesKey).slice().reverse();
+            renderList('updateList', updates, (item) => `
+                <div class="list-item">
+                    <h4>${item.headline}</h4>
+                    <small>${item.date}</small>
+                    <p style="margin-top: 8px;">${item.summary}</p>
+                </div>
+            `);
+        }
+
+        function renderGames() {
+            const games = loadData(gamesKey).slice().reverse();
+            renderList('gameList', games, (item) => `
+                <div class="list-item">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <h4>${item.title}</h4>
+                            <small>${item.type} • ${item.difficulty} • ${item.date}</small>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="deleteGame('${item.id}')" style="background: rgba(255, 59, 48, 0.1); color: #ff3b30; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 12px;">Delete</button>
+                            <button onclick="window.open('student-game.html?id=${item.id}', '_blank')" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 12px;">Preview</button>
+                        </div>
+                    </div>
+                    <p style="margin-top: 8px;">${item.brief}</p>
+                    <div class="tag pink">Interactive</div>
+                </div>
+            `);
+        }
+
+        window.deleteGame = function (id) {
+            if (confirm('Are you sure you want to delete this game?')) {
+                let games = loadData(gamesKey);
+                games = games.filter(g => g.id !== id);
+                saveData(gamesKey, games);
+                renderGames();
+                updateCounters();
+            }
+        };
+
+        announcementForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const next = {
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                title: announcementForm.announcementTitle.value.trim(),
+                body: announcementForm.announcementBody.value.trim(),
+                audience: announcementForm.announcementAudience.value,
+                date: formatDate(),
+                text: announcementForm.announcementBody.value.trim()
+            };
+            if (!next.title || !next.body) return;
+            const announcements = loadData(announcementsKey);
+            announcements.push(next);
+            saveData(announcementsKey, announcements);
+            announcementForm.reset();
+            renderAnnouncements();
+            updateCounters();
+        });
+
+        updateForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const next = {
+                headline: updateForm.updateHeadline.value.trim(),
+                summary: updateForm.updateSummary.value.trim(),
+                date: formatDate()
+            };
+            if (!next.headline || !next.summary) return;
+            const updates = loadData(updatesKey);
+            updates.push(next);
+            saveData(updatesKey, updates);
+            updateForm.reset();
+            renderUpdates();
+        });
+
+        gameForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const next = {
+                title: gameForm.gameTitle.value.trim(),
+                type: gameForm.gameType.value,
+                difficulty: gameForm.gameDifficulty.value,
+                brief: gameForm.gameBrief.value.trim(),
+                date: formatDate(),
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2)
+            };
+            if (!next.title || !next.type || !next.brief) return;
+            const games = loadData(gamesKey);
+            games.push(next);
+            saveData(gamesKey, games);
+            gameForm.reset();
+            renderGames();
+            updateCounters();
+        });
+
+        const API_BASE = window.location.origin;
+
+        renderAnnouncements();
+        renderUpdates();
+        renderGames();
+        updateCounters();
+
+        function renderGameTemplates() {
+            const container = document.getElementById('gameTemplateGrid');
+            if (!container) return;
+            container.innerHTML = GAME_LIBRARY.map(template => `
+                <article class="game-template-card" data-title="${template.title}" data-brief="${template.brief}" data-type="${template.type}">
+                    <div class="template-icon">${template.icon}</div>
+                    <h3>${template.title}</h3>
+                    <p>${template.description}</p>
+                </article>
+            `).join('');
+        }
+
+        function renderGameTools() {
+            const tools = loadData(gameToolsKey).slice().reverse();
+            renderList('gameToolsList', tools, (tool) => `
+                <div class="list-item">
+                    <h4>${tool.link}</h4>
+                    <small>${tool.date}</small>
+                    <p style="margin-top: 8px;">${tool.instructions}</p>
+                </div>
+            `);
+        }
+
+        renderGameTemplates();
+        renderGameTools();
+
+        const GAME_TOOLS = {
+            'trivia': `
+                <h3 style="margin: 0 0 12px; font-size: 16px;">Trivia / Quiz</h3>
+                <p style="color: #9ea4b6; margin-bottom: 16px;">Create a multi-question quiz with scoring and time limits.</p>
+                <button type="button" class="primary-btn" onclick="window.location.href='faculty-create-quiz.html'" style="width: 100%;">
+                    🚀 Open Quiz Builder
+                </button>
+            `,
+            'flashcard': `
+                <h3 style="margin: 0 0 12px; font-size: 16px;">Flashcard Set</h3>
+                <div style="display: grid; gap: 12px;">
+                    <div style="border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
+                        <input type="text" name="front" placeholder="Front (Term)" style="margin-bottom: 8px;" required>
+                        <textarea name="back" placeholder="Back (Definition)" rows="2" required></textarea>
+                    </div>
+                    <button type="button" class="secondary-btn" style="width: 100%;">+ Add Another Card</button>
+                </div>
+            `,
+            'scavenger': `
+                <h3 style="margin: 0 0 12px; font-size: 16px;">Scavenger Hunt Clue</h3>
+                <div style="display: grid; gap: 12px;">
+                    <textarea name="clue" placeholder="Clue text..." rows="2" required></textarea>
+                    <input type="text" name="locationCode" placeholder="Location Code / Secret Word" required>
+                </div>
+            `
+        };
+
+        document.getElementById('gameTemplateGrid')?.addEventListener('click', (event) => {
+            const card = event.target.closest('.game-template-card');
+            if (!card) return;
+
+            const title = card.dataset.title;
+
+            // Direct redirect for specific game types
+            if (title === 'Debug the Monolith') {
+                window.location.href = 'faculty-create-debug.html';
+                return;
+            }
+            if (title === 'Quiz') {
+                window.location.href = 'faculty-create-quiz.html';
+                return;
+            }
+            if (title === 'Code Logic Unjumble') {
+                window.location.href = 'faculty-create-unjumble.html';
+                return;
+            }
+            if (title === 'Tech Stack Sorter') {
+                window.location.href = 'faculty-create-sorter.html';
+                return;
+            }
+            if (title === 'Syntax Fill-in') {
+                window.location.href = 'faculty-create-fillin.html';
+                return;
+            }
+            if (title === 'SQL Query Builder') {
+                window.location.href = 'faculty-create-sql.html';
+                return;
+            }
+
+            // Visual selection
+            document.querySelectorAll('.game-template-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+
+            const brief = card.dataset.brief;
+            const type = card.dataset.type;
+
+            const gameTitle = document.getElementById('gameTitle');
+            const gameDetails = document.getElementById('gameBrief');
+            const gameType = document.getElementById('gameType');
+            const dynamicTools = document.getElementById('dynamicGameTools');
+
+            if (gameTitle) gameTitle.value = title;
+            if (gameDetails) gameDetails.value = brief;
+            if (gameType) {
+                // Find option with matching text or value
+                const option = [...gameType.options].find(opt => opt.value.toLowerCase().includes(type) || opt.text.toLowerCase().includes(title.split(' ')[0].toLowerCase()));
+                if (option) gameType.value = option.value;
+            }
+
+            // Inject dynamic tools
+            if (dynamicTools) {
+                const toolKey = Object.keys(GAME_TOOLS).find(k => title.toLowerCase().includes(k)) || 'trivia';
+                dynamicTools.innerHTML = GAME_TOOLS[toolKey] || '';
+                dynamicTools.style.display = 'block';
+
+                // Scroll to form
+                document.getElementById('createGameForm')?.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+
+        document.getElementById('createGameForm')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const gameData = Object.fromEntries(formData.entries());
+
+            // Add metadata
+            gameData.id = Date.now().toString();
+            gameData.createdAt = new Date().toISOString();
+            gameData.status = 'active';
+
+            // Save to local storage
+            const games = loadData(gamesKey);
+            games.push(gameData);
+            saveData(gamesKey, games);
+
+            // Reset and feedback
+            event.target.reset();
+            document.getElementById('dynamicGameTools').style.display = 'none';
+            document.querySelectorAll('.game-template-card').forEach(c => c.classList.remove('selected'));
+
+            renderGames();
+            updateCounters();
+            alert('Game created successfully!');
+        });
+
+        document.getElementById('gameToolsForm')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const link = document.getElementById('assetLink').value.trim();
+            const instructions = document.getElementById('instructions').value.trim();
+            if (!link || !instructions) return;
+            const tools = loadData(gameToolsKey);
+            tools.push({
+                link,
+                instructions,
+                date: formatDate()
+            });
+            saveData(gameToolsKey, tools);
+            event.target.reset();
+            renderGameTools();
+        });
+
+        const adminProfileToggle = document.getElementById('adminProfileToggle');
+        const adminProfileDropdown = document.getElementById('adminProfileDropdown');
+        const signOutControl = document.getElementById('signOutControl');
+        const gamesNavBtn = document.getElementById('gamesNavBtn');
+
+        if (adminProfileToggle && adminProfileDropdown) {
+            adminProfileToggle.addEventListener('click', () => {
+                const isOpen = adminProfileDropdown.style.display === 'flex';
+                adminProfileDropdown.style.display = isOpen ? 'none' : 'flex';
+            });
+            document.addEventListener('click', (event) => {
+                if (!adminProfileToggle.contains(event.target) && !adminProfileDropdown.contains(event.target)) {
+                    adminProfileDropdown.style.display = 'none';
+                }
+            });
+        }
+
+        async function performLogout() {
+            try {
+                await fetch(`${API_BASE}/api/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            } catch (error) {
+                console.error('Logout failed', error);
+            } finally {
+                const email = localStorage.getItem('email');
+                if (email) {
+                    localStorage.removeItem(`session_${email}`);
+                }
+                localStorage.removeItem('loggedIn');
+                localStorage.removeItem('firstName');
+                localStorage.removeItem('email');
+                localStorage.removeItem('role');
+                window.location.href = 'login.html';
+            }
+        }
+
+        if (signOutControl) {
+            signOutControl.addEventListener('click', performLogout);
+        }
+
+        if (gamesNavBtn) {
+            gamesNavBtn.addEventListener('click', () => {
+                document.getElementById('gamesPanel')?.scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+    </script>
+    <!-- System Status Modal -->
+    <div id="statusModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div
+            style="background: #1c1f26; padding: 32px; border-radius: 24px; width: 400px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="margin: 0;">System Status</h2>
+                <button onclick="document.getElementById('statusModal').style.display='none'"
+                    style="background: none; border: none; color: #9ea4b6; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div
+                    style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span
+                            style="width: 10px; height: 10px; background: #34c759; border-radius: 50%; box-shadow: 0 0 10px #34c759;"></span>
+                        <span>Server Uptime</span>
+                    </div>
+                    <strong style="font-family: monospace;">99.98%</strong>
+                </div>
+
+                <div
+                    style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span
+                            style="width: 10px; height: 10px; background: #34c759; border-radius: 50%; box-shadow: 0 0 10px #34c759;"></span>
+                        <span>Database</span>
+                    </div>
+                    <strong style="color: #34c759;">Healthy</strong>
+                </div>
+
+                <div
+                    style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 16px;">👥</span>
+                        <span>Active Students</span>
+                    </div>
+                    <strong>24</strong>
+                </div>
+
+                <div
+                    style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 16px;">💾</span>
+                        <span>Storage</span>
+                    </div>
+                    <strong>45% Used</strong>
+                </div>
+            </div>
+
+            <button onclick="document.getElementById('statusModal').style.display='none'" class="primary-btn"
+                style="width: 100%; margin-top: 24px;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function showSystemStatus() {
+            const modal = document.getElementById('statusModal');
+            modal.style.display = 'flex';
+
+            // Close on click outside
+            modal.onclick = function (e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDWAVE – Settings</title>
+    <link rel="stylesheet" href="role-page.css">
+    <style>
+        :root {
+            --bg-primary: #0b0b0f;
+            --bg-secondary: #111319;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #f5f7ff;
+            --text-secondary: #9ea4b6;
+        }
+
+        body.light-theme {
+            --bg-primary: #f5f7ff;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(0, 0, 0, 0.03);
+            --border-color: rgba(0, 0, 0, 0.1);
+            --text-primary: #0b0b0f;
+            --text-secondary: #5a5f6f;
+        }
+
+        body.light-theme {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .settings-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .settings-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .settings-section h2 {
+            margin: 0 0 24px;
+            font-size: 24px;
+            color: var(--text-primary);
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0f62fe;
+        }
+
+        .form-group input:read-only {
+            background: rgba(255, 255, 255, 0.02);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .photo-upload-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 24px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .photo-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4da0ff 0%, #a78bfa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-upload-info {
+            flex: 1;
+        }
+
+        .photo-upload-info h3 {
+            margin: 0 0 8px;
+            font-size: 16px;
+        }
+
+        .photo-upload-info p {
+            margin: 0 0 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .upload-btn {
+            padding: 10px 20px;
+            background: #0f62fe;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .upload-btn:hover {
+            background: #0353e9;
+        }
+
+        .upload-btn.secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .upload-btn.secondary:hover {
+            background: var(--bg-card);
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .theme-toggle-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+        }
+
+        .theme-toggle-info h3 {
+            margin: 0 0 4px;
+            font-size: 16px;
+        }
+
+        .theme-toggle-info p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #0f62fe;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(28px);
+        }
+
+        .toggle-switch::before {
+            content: '🌙';
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            z-index: 0;
+        }
+
+        .toggle-switch.active::before {
+            content: '☀️';
+            left: auto;
+            right: 8px;
+        }
+
+        .save-section {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .save-btn {
+            padding: 12px 32px;
+            background: #0f62fe;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .save-btn:hover {
+            background: #0353e9;
+        }
+
+        .cancel-btn {
+            padding: 12px 32px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .cancel-btn:hover {
+            background: var(--bg-card);
+        }
+
+        .password-requirements {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+
+        .success-message {
+            padding: 16px;
+            background: rgba(52, 199, 89, 0.1);
+            border: 1px solid rgba(52, 199, 89, 0.3);
+            border-radius: 8px;
+            color: #34c759;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .photo-upload-section {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-shell">
+        <header class="hero">
+            <a class="ghost-link" href="homepage.html">← Back to Dashboard</a>
+            <p class="eyebrow">Account</p>
+            <h1>Settings</h1>
+            <p class="lede">Manage your profile and preferences</p>
+        </header>
+
+        <div class="settings-container">
+            <div class="success-message" id="successMessage">
+                ✓ Settings saved successfully!
+            </div>
+
+            <!-- Profile Photo -->
+            <div class="settings-section">
+                <h2>Profile Photo</h2>
+                <div class="photo-upload-section">
+                    <div class="photo-preview" id="photoPreview">
+                        <span id="photoInitials">ST</span>
+                        <img id="photoImage" style="display: none;">
+                    </div>
+                    <div class="photo-upload-info">
+                        <h3>Upload Profile Picture</h3>
+                        <p>JPG, PNG or GIF. Max size 2MB.</p>
+                        <div style="display: flex; gap: 12px;">
+                            <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                            <button class="upload-btn" onclick="document.getElementById('photoInput').click()">
+                                📷 Upload Photo
+                            </button>
+                            <button class="upload-btn secondary" onclick="removePhoto()">
+                                🗑️ Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="settings-section">
+                <h2>Personal Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Display Name *</label>
+                        <input type="text" id="displayName" placeholder="Enter your display name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bio / About Me</label>
+                        <textarea id="bio" placeholder="Tell us about yourself..."></textarea>
+                    </div>
+
+                    <div class="two-column">
+                        <div class="form-group">
+                            <label>Student ID</label>
+                            <input type="text" id="studentId" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" id="email" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phone" placeholder="+1 (555) 123-4567">
+                    </div>
+
+                    <div class="two-column">
+                        <div class="form-group">
+                            <label>Department / Program</label>
+                            <select id="department">
+                                <option value="">Select Department</option>
+                                <option value="mca">Master of Computer Applications (MCA)</option>
+                                <option value="cs">Computer Science</option>
+                                <option value="it">Information Technology</option>
+                                <option value="ece">Electronics & Communication</option>
+                                <option value="ee">Electrical Engineering</option>
+                                <option value="me">Mechanical Engineering</option>
+                                <option value="ce">Civil Engineering</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Year / Semester</label>
+                            <select id="yearSemester">
+                                <option value="">Select Year/Semester</option>
+                                <option value="1-1">Year 1 - Semester 1</option>
+                                <option value="1-2">Year 1 - Semester 2</option>
+                                <option value="2-1">Year 2 - Semester 1</option>
+                                <option value="2-2">Year 2 - Semester 2</option>
+                                <option value="3-1">Year 3 - Semester 1</option>
+                                <option value="3-2">Year 3 - Semester 2</option>
+                                <option value="4-1">Year 4 - Semester 1</option>
+                                <option value="4-2">Year 4 - Semester 2</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Password -->
+            <div class="settings-section">
+                <h2>Change Password</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <input type="password" id="currentPassword" placeholder="Enter current password">
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="newPassword" placeholder="Enter new password">
+                        <div class="password-requirements">
+                            Password must be at least 8 characters long and contain uppercase, lowercase, number, and
+                            special character.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appearance -->
+            <div class="settings-section">
+                <h2>Appearance</h2>
+                <div class="theme-toggle-section">
+                    <div class="theme-toggle-info">
+                        <h3>Theme</h3>
+                        <p>Switch between light and dark mode</p>
+                    </div>
+                    <div class="toggle-switch" id="themeToggle"></div>
+                </div>
+            </div>
+
+            <!-- Save/Cancel -->
+            <div class="save-section">
+                <button class="cancel-btn" onclick="window.location.href='homepage.html'">Cancel</button>
+                <button class="save-btn" onclick="saveSettings()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const currentUserEmail = localStorage.getItem('email') || 'student@example.com';
+        const currentUserName = localStorage.getItem('firstName') || 'Student';
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        function loadSettings() {
+            // Load saved settings from localStorage
+            const settings = JSON.parse(localStorage.getItem('userSettings') || '{}');
+
+            document.getElementById('displayName').value = settings.displayName || currentUserName;
+            document.getElementById('bio').value = settings.bio || '';
+            document.getElementById('studentId').value = settings.studentId || 'STU' + Date.now().toString().slice(-6);
+            document.getElementById('email').value = currentUserEmail;
+            document.getElementById('phone').value = settings.phone || '';
+            document.getElementById('department').value = settings.department || '';
+            document.getElementById('yearSemester').value = settings.yearSemester || '';
+
+            // Load profile photo
+            if (settings.profilePhoto) {
+                document.getElementById('photoImage').src = settings.profilePhoto;
+                document.getElementById('photoImage').style.display = 'block';
+                document.getElementById('photoInitials').style.display = 'none';
+            } else {
+                document.getElementById('photoInitials').textContent = getInitials(settings.displayName || currentUserName);
+            }
+
+            // Load theme
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+                document.getElementById('themeToggle').classList.add('active');
+            }
+        }
+
+        function saveSettings() {
+            const displayName = document.getElementById('displayName').value;
+            const bio = document.getElementById('bio').value;
+            const phone = document.getElementById('phone').value;
+            const department = document.getElementById('department').value;
+            const yearSemester = document.getElementById('yearSemester').value;
+            const studentId = document.getElementById('studentId').value;
+
+            // Validate required fields
+            if (!displayName) {
+                alert('Display name is required!');
+                return;
+            }
+
+            // Check password change
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword || confirmPassword) {
+                if (!currentPassword) {
+                    alert('Please enter your current password to change it.');
+                    return;
+                }
+                if (newPassword !== confirmPassword) {
+                    alert('New passwords do not match!');
+                    return;
+                }
+                if (newPassword.length < 8) {
+                    alert('Password must be at least 8 characters long!');
+                    return;
+                }
+                // In a real app, you would verify current password and update it here
+                console.log('Password would be updated in a real implementation');
+            }
+
+            // Save settings
+            const settings = {
+                displayName,
+                bio,
+                phone,
+                department,
+                yearSemester,
+                studentId,
+                profilePhoto: document.getElementById('photoImage').src || null
+            };
+
+            localStorage.setItem('userSettings', JSON.stringify(settings));
+            localStorage.setItem('firstName', displayName);
+
+            // Show success message
+            const successMsg = document.getElementById('successMessage');
+            successMsg.style.display = 'block';
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 3000);
+
+            // Clear password fields
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+
+        // Photo upload handler
+        document.getElementById('photoInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('File size must be less than 2MB!');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    document.getElementById('photoImage').src = event.target.result;
+                    document.getElementById('photoImage').style.display = 'block';
+                    document.getElementById('photoInitials').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function removePhoto() {
+            document.getElementById('photoImage').src = '';
+            document.getElementById('photoImage').style.display = 'none';
+            document.getElementById('photoInitials').style.display = 'flex';
+            document.getElementById('photoInput').value = '';
+        }
+
+        // Theme toggle
+        document.getElementById('themeToggle').addEventListener('click', function () {
+            this.classList.toggle('active');
+            document.body.classList.toggle('light-theme');
+
+            const theme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+            localStorage.setItem('theme', theme);
+        });
+
+        // Initialize
+        loadSettings();
+    </script>
+</body>
+
+</html>

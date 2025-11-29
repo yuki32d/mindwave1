@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forgot Password</title>
+  <style>
+    body { margin:0; font-family: Inter, Segoe UI, Arial, sans-serif; display:flex; min-height:100vh; align-items:center; justify-content:center; background:#0b0d16; color:#fff; }
+    .card { width:min(480px, 92vw); background:#121524; border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:14px; }
+    h1 { font-size:22px; margin:0 0 6px; }
+    .row { display:flex; gap:8px; }
+    .role { flex:1; display:flex; align-items:center; gap:6px; border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:8px 12px; background:#171a2f; }
+    label { font-size:13px; color:#c7cbe2; }
+    input { width:100%; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:#171a2f; color:#fff; font-size:14px; }
+    button { padding:12px; border-radius:12px; border:none; background:#3466ff; color:#fff; font-weight:600; cursor:pointer; }
+    a { color:#9fb2ff; text-decoration:none; font-size:13px; }
+    .actions { display:flex; justify-content:space-between; align-items:center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Reset password</h1>
+    <div class="row">
+      <div class="role"><input type="radio" name="role" value="student" id="r-stu" checked><label for="r-stu">Student</label></div>
+      <div class="role"><input type="radio" name="role" value="admin" id="r-adm"><label for="r-adm">Admin</label></div>
+    </div>
+    <label for="email">Campus email</label>
+    <input id="email" type="email" placeholder="student.mca25@cmrit.ac.in">
+    <button id="sendBtn">Send code</button>
+    <div id="resetBlock" style="display:none;">
+      <label for="code">Verification code</label>
+      <input id="code" type="text" maxlength="6" placeholder="6-digit code">
+      <label for="newpass">New password</label>
+      <input id="newpass" type="password" placeholder="Create new password">
+      <button id="resetBtn">Update password</button>
+    </div>
+    <div class="actions">
+      <span></span>
+      <a href="login-simple.html">Back to login</a>
+    </div>
+  </div>
+  <script>
+    let API_BASE = window.location.origin;
+    (async () => {
+      if (window.location.protocol === 'file:') {
+        const host = '127.0.0.1';
+        const ports = [8080,8081,8082,8083,8084];
+        for (const p of ports) {
+          try { const r = await fetch(`http://${host}:${p}/`); if (r.ok) { API_BASE = `http://${host}:${p}`; break; } } catch {}
+        }
+      }
+    })();
+    const STUDENT_EMAIL_REGEX = /\.mca25@cmrit\.ac\.in$/i;
+    const ADMIN_EMAIL_REGEX = /\.mca@cmrit\.ac\.in$/i;
+    function updatePlaceholder() {
+      const role = document.querySelector('input[name="role"]:checked').value;
+      const el = document.getElementById('email');
+      el.placeholder = role === 'student' ? 'student.mca25@cmrit.ac.in' : 'admin.mca@cmrit.ac.in';
+    }
+    document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', updatePlaceholder));
+    updatePlaceholder();
+    let activeEmail = '';
+    document.getElementById('sendBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim().toLowerCase();
+      const ok = STUDENT_EMAIL_REGEX.test(email) || ADMIN_EMAIL_REGEX.test(email);
+      if (!ok) { alert('Use your campus email'); return; }
+      try {
+        const res = await fetch(`${API_BASE}/api/password/forgot`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email }) });
+        const data = await res.json();
+        if (!data.ok) { alert(data.message || 'Unable to send code'); return; }
+        activeEmail = email;
+        alert('Verification code sent');
+        document.getElementById('resetBlock').style.display = 'block';
+      } catch { alert('Unable to send code'); }
+    });
+    document.getElementById('resetBtn').addEventListener('click', async () => {
+      const code = document.getElementById('code').value.trim();
+      const newPassword = document.getElementById('newpass').value.trim();
+      if (!code || code.length !== 6) { alert('Enter 6-digit code'); return; }
+      try {
+        const res = await fetch(`${API_BASE}/api/password/reset`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: activeEmail, code, newPassword }) });
+        const data = await res.json();
+        if (!data.ok) { alert(data.message || 'Unable to reset'); return; }
+        alert('Password updated');
+        window.location.href = 'login-simple.html';
+      } catch { alert('Unable to reset'); }
+    });
+  </script>
+</body>
+</html>

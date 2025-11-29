@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDWAVE – My Profile</title>
+    <link rel="stylesheet" href="role-page.css">
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme-init.js"></script>
+    <style>
+        .profile-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Hero Section */
+        .profile-hero {
+            background: linear-gradient(135deg, rgba(15, 98, 254, 0.2) 0%, rgba(138, 43, 226, 0.2) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 48px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            backdrop-filter: blur(10px);
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4da0ff 0%, #a78bfa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 700;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-info h1 {
+            margin: 0 0 8px;
+            font-size: 36px;
+        }
+
+        .profile-info p {
+            margin: 0;
+            color: #9ea4b6;
+            font-size: 16px;
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+            color: #000;
+            border-radius: 999px;
+            font-weight: 700;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        .edit-profile-btn {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .edit-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: #9ea4b6;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn:hover {
+            color: white;
+        }
+
+        .tab-btn.active {
+            color: white;
+            border-bottom-color: #0f62fe;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-4px);
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4da0ff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #9ea4b6;
+            font-size: 14px;
+        }
+
+        /* Achievements */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .achievement-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .achievement-card.unlocked {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 165, 0, 0.1) 100%);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .achievement-card.locked {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+
+        .achievement-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .achievement-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .achievement-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .achievement-desc {
+            font-size: 12px;
+            color: #9ea4b6;
+        }
+
+        /* Activity List */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .activity-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .activity-icon {
+            font-size: 24px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(15, 98, 254, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .activity-info h4 {
+            margin: 0 0 4px;
+            font-size: 16px;
+        }
+
+        .activity-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #9ea4b6;
+        }
+
+        .activity-score {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4da0ff;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: #9ea4b6;
+        }
+
+        /* Skills */
+        .skills-grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .skill-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .skill-score {
+            font-weight: 700;
+            color: #4da0ff;
+        }
+
+        .skill-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .skill-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4da0ff 0%, #a78bfa 100%);
+            border-radius: 999px;
+            transition: width 0.6s ease;
+        }
+
+        /* Settings */
+        .settings-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .settings-section h3 {
+            margin: 0 0 24px;
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #9ea4b6;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #0f62fe;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .switch.active {
+            background: #0f62fe;
+        }
+
+        .switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .switch.active::after {
+            transform: translateX(24px);
+        }
+
+        .save-btn {
+            padding: 12px 32px;
+            background: #0f62fe;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .save-btn:hover {
+            background: #0353e9;
+        }
+
+        @media (max-width: 768px) {
+            .profile-hero {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .activity-item {
+                grid-template-columns: auto 1fr;
+            }
+
+            .activity-score,
+            .activity-time {
+                grid-column: 2;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-shell">
+        <header class="hero">
+            <a class="ghost-link" href="homepage.html">← Back to Dashboard</a>
+            <p class="eyebrow">Your Profile</p>
+            <h1>Student Profile</h1>
+            <p class="lede">Track your progress and achievements</p>
+        </header>
+
+        <div class="profile-container">
+            <!-- Hero Section -->
+            <div class="profile-hero">
+                <div class="profile-avatar" id="profileAvatar">ST</div>
+                <div class="profile-info">
+                    <h1 id="profileName">Student Name</h1>
+                    <p id="profileEmail">student@example.com</p>
+                    <span class="rank-badge" id="rankBadge">🏆 Rank #-</span>
+                </div>
+                <button class="edit-profile-btn" onclick="switchTab('settings')">⚙️ Edit Profile</button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+                <button class="tab-btn" onclick="switchTab('activity')">Activity</button>
+                <button class="tab-btn" onclick="switchTab('achievements')">Achievements</button>
+                <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-icon">🎯</span>
+                        <div class="stat-value" id="totalPoints">0</div>
+                        <div class="stat-label">Total Points</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🏆</span>
+                        <div class="stat-value" id="currentRank">#-</div>
+                        <div class="stat-label">Current Rank</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🎮</span>
+                        <div class="stat-value" id="gamesCompleted">0</div>
+                        <div class="stat-label">Games Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">📊</span>
+                        <div class="stat-value" id="avgAccuracy">0%</div>
+                        <div class="stat-label">Avg Accuracy</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">⏱️</span>
+                        <div class="stat-value" id="totalTime">0m</div>
+                        <div class="stat-label">Time Spent</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🔥</span>
+                        <div class="stat-value" id="currentStreak">0</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                </div>
+
+                <h2 style="margin-bottom: 16px;">Skills Breakdown</h2>
+                <div class="skills-grid" id="skillsGrid"></div>
+            </div>
+
+            <!-- Activity Tab -->
+            <div class="tab-content" id="activity">
+                <h2 style="margin-bottom: 16px;">Recent Games</h2>
+                <div class="activity-list" id="activityList"></div>
+            </div>
+
+            <!-- Achievements Tab -->
+            <div class="tab-content" id="achievements">
+                <h2 style="margin-bottom: 16px;">Your Achievements</h2>
+                <div class="achievements-grid" id="achievementsGrid"></div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-content" id="settings">
+                <div class="settings-section">
+                    <h3>Personal Information</h3>
+                    <div class="form-group">
+                        <label>Display Name</label>
+                        <input type="text" id="displayName" placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="emailInput" readonly>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Privacy</h3>
+                    <div class="form-group">
+                        <div class="toggle-switch">
+                            <div class="switch" id="privacyToggle"></div>
+                            <label style="margin: 0;">Show profile on leaderboard</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Notifications</h3>
+                    <div class="form-group">
+                        <div class="toggle-switch">
+                            <div class="switch active" id="notifToggle"></div>
+                            <label style="margin: 0;">Enable notifications</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="save-btn" onclick="saveSettings()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const activityKey = 'student_activities';
+        const currentUserEmail = localStorage.getItem('email') || 'student@example.com';
+        const currentUserName = localStorage.getItem('firstName') || 'Student';
+
+        function loadActivities() {
+            try {
+                return JSON.parse(localStorage.getItem(activityKey) || '[]');
+            } catch {
+                return [];
+            }
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        function calculateStats() {
+            const activities = loadActivities().filter(a => a.studentEmail === currentUserEmail && a.status === 'completed');
+
+            const totalPoints = activities.reduce((sum, a) => sum + (a.rawScore || 0), 0);
+            const gamesCompleted = activities.length;
+            const avgAccuracy = gamesCompleted > 0
+                ? Math.round(activities.reduce((sum, a) => sum + (a.score || 0), 0) / gamesCompleted)
+                : 0;
+            const totalTime = activities.reduce((sum, a) => sum + (a.timeTaken || 0), 0);
+
+            // Calculate streak
+            const dates = activities.map(a => new Date(a.completedAt).toDateString()).filter((v, i, a) => a.indexOf(v) === i).sort();
+            let streak = 0;
+            const today = new Date().toDateString();
+            if (dates.includes(today) || (dates.length > 0 && dates[dates.length - 1] === new Date(Date.now() - 86400000).toDateString())) {
+                streak = 1;
+                for (let i = dates.length - 2; i >= 0; i--) {
+                    const diff = (new Date(dates[i + 1]) - new Date(dates[i])) / 86400000;
+                    if (diff === 1) streak++;
+                    else break;
+                }
+            }
+
+            return { totalPoints, gamesCompleted, avgAccuracy, totalTime, streak };
+        }
+
+        function calculateRank() {
+            const allActivities = loadActivities();
+            const playerStats = {};
+
+            allActivities.forEach(activity => {
+                const email = activity.studentEmail;
+                if (!playerStats[email]) {
+                    playerStats[email] = { email, totalPoints: 0 };
+                }
+                playerStats[email].totalPoints += activity.rawScore || 0;
+            });
+
+            const leaderboard = Object.values(playerStats).sort((a, b) => b.totalPoints - a.totalPoints);
+            const rank = leaderboard.findIndex(p => p.email === currentUserEmail) + 1;
+            return rank > 0 ? rank : '-';
+        }
+
+        function calculateSkills() {
+            const activities = loadActivities().filter(a => a.studentEmail === currentUserEmail && a.status === 'completed');
+            const skills = {};
+
+            const gameTypeMap = {
+                'quiz': 'Quiz',
+                'unjumble': 'Logic Unjumble',
+                'code-unjumble': 'Logic Unjumble',
+                'sorter': 'Tech Sorter',
+                'tech-sorter': 'Tech Sorter',
+                'fillin': 'Syntax Fill-in',
+                'syntax-fill': 'Syntax Fill-in',
+                'sql': 'SQL Builder',
+                'sql-builder': 'SQL Builder'
+            };
+
+            activities.forEach(a => {
+                const type = gameTypeMap[a.gameType] || a.gameType;
+                if (!skills[type]) {
+                    skills[type] = { count: 0, totalScore: 0 };
+                }
+                skills[type].count++;
+                skills[type].totalScore += a.score || 0;
+            });
+
+            return Object.entries(skills).map(([name, data]) => ({
+                name,
+                avgScore: Math.round(data.totalScore / data.count),
+                count: data.count
+            }));
+        }
+
+        function checkAchievements() {
+            const activities = loadActivities().filter(a => a.studentEmail === currentUserEmail && a.status === 'completed');
+            const stats = calculateStats();
+
+            const achievements = [
+                {
+                    id: 'perfect_score',
+                    name: 'Perfect Score',
+                    desc: 'Score 100% on any game',
+                    icon: '💯',
+                    unlocked: activities.some(a => a.score === 100)
+                },
+                {
+                    id: 'speed_demon',
+                    name: 'Speed Demon',
+                    desc: 'Complete a game in under 2 minutes',
+                    icon: '⚡',
+                    unlocked: activities.some(a => (a.timeTaken || 0) < 120)
+                },
+                {
+                    id: 'consistent_learner',
+                    name: 'Consistent Learner',
+                    desc: 'Maintain a 7-day streak',
+                    icon: '🔥',
+                    unlocked: stats.streak >= 7
+                },
+                {
+                    id: 'quiz_master',
+                    name: 'Quiz Master',
+                    desc: 'Complete 10 quizzes',
+                    icon: '📚',
+                    unlocked: activities.filter(a => a.gameType === 'quiz').length >= 10
+                },
+                {
+                    id: 'sql_wizard',
+                    name: 'SQL Wizard',
+                    desc: 'Perfect score on SQL game',
+                    icon: '🧙',
+                    unlocked: activities.some(a => (a.gameType === 'sql' || a.gameType === 'sql-builder') && a.score === 100)
+                },
+                {
+                    id: 'first_game',
+                    name: 'First Steps',
+                    desc: 'Complete your first game',
+                    icon: '🎯',
+                    unlocked: activities.length > 0
+                }
+            ];
+
+            return achievements;
+        }
+
+        function renderOverview() {
+            const stats = calculateStats();
+            const rank = calculateRank();
+
+            document.getElementById('totalPoints').textContent = stats.totalPoints.toLocaleString();
+            document.getElementById('currentRank').textContent = rank !== '-' ? `#${rank}` : '-';
+            document.getElementById('gamesCompleted').textContent = stats.gamesCompleted;
+            document.getElementById('avgAccuracy').textContent = `${stats.avgAccuracy}%`;
+            document.getElementById('totalTime').textContent = `${Math.floor(stats.totalTime / 60)}m`;
+            document.getElementById('currentStreak').textContent = stats.streak;
+
+            // Skills
+            const skills = calculateSkills();
+            const skillsGrid = document.getElementById('skillsGrid');
+            skillsGrid.innerHTML = skills.map(skill => `
+                <div class="skill-item">
+                    <div class="skill-header">
+                        <div class="skill-name">${skill.name}</div>
+                        <div class="skill-score">${skill.avgScore}%</div>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-fill" style="width: ${skill.avgScore}%"></div>
+                    </div>
+                    <p style="margin: 8px 0 0; font-size: 12px; color: #9ea4b6;">${skill.count} games played</p>
+                </div>
+            `).join('');
+        }
+
+        function renderActivity() {
+            const activities = loadActivities()
+                .filter(a => a.studentEmail === currentUserEmail && a.status === 'completed')
+                .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+                .slice(0, 10);
+
+            const activityList = document.getElementById('activityList');
+
+            if (activities.length === 0) {
+                activityList.innerHTML = '<p style="color: #9ea4b6; text-align: center; padding: 32px;">No activity yet. Start playing games!</p>';
+                return;
+            }
+
+            activityList.innerHTML = activities.map(a => {
+                const date = new Date(a.completedAt);
+                const timeAgo = getTimeAgo(date);
+
+                return `
+                    <div class="activity-item">
+                        <div class="activity-icon">🎮</div>
+                        <div class="activity-info">
+                            <h4>${a.gameTitle}</h4>
+                            <p>${a.gameType} • ${timeAgo}</p>
+                        </div>
+                        <div class="activity-score">${a.score}%</div>
+                        <div class="activity-time">${Math.floor((a.timeTaken || 0) / 60)}m ${(a.timeTaken || 0) % 60}s</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderAchievements() {
+            const achievements = checkAchievements();
+            const achievementsGrid = document.getElementById('achievementsGrid');
+
+            achievementsGrid.innerHTML = achievements.map(ach => `
+                <div class="achievement-card ${ach.unlocked ? 'unlocked' : 'locked'}">
+                    <span class="achievement-icon">${ach.icon}</span>
+                    <div class="achievement-name">${ach.name}</div>
+                    <div class="achievement-desc">${ach.desc}</div>
+                    ${ach.unlocked ? '<p style="margin-top: 8px; color: #34c759; font-size: 12px;">✓ Unlocked</p>' : '<p style="margin-top: 8px; color: #9ea4b6; font-size: 12px;">🔒 Locked</p>'}
+                </div>
+            `).join('');
+        }
+
+        function renderSettings() {
+            document.getElementById('displayName').value = currentUserName;
+            document.getElementById('emailInput').value = currentUserEmail;
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'Just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+
+            // Render content
+            if (tabName === 'overview') renderOverview();
+            else if (tabName === 'activity') renderActivity();
+            else if (tabName === 'achievements') renderAchievements();
+            else if (tabName === 'settings') renderSettings();
+        }
+
+        function saveSettings() {
+            const displayName = document.getElementById('displayName').value;
+            if (displayName) {
+                localStorage.setItem('firstName', displayName);
+                document.getElementById('profileName').textContent = displayName;
+                alert('Settings saved successfully!');
+            }
+        }
+
+        // Toggle switches
+        document.getElementById('privacyToggle').addEventListener('click', function () {
+            this.classList.toggle('active');
+        });
+
+        document.getElementById('notifToggle').addEventListener('click', function () {
+            this.classList.toggle('active');
+        });
+
+        // Initialize
+        document.getElementById('profileName').textContent = currentUserName;
+        document.getElementById('profileEmail').textContent = currentUserEmail;
+        document.getElementById('profileAvatar').textContent = getInitials(currentUserName);
+
+        const rank = calculateRank();
+        document.getElementById('rankBadge').textContent = rank !== '-' ? `🏆 Rank #${rank}` : '🏆 Unranked';
+
+        renderOverview();
+    </script>
+</body>
+
+</html>

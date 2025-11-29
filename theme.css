@@ -1,0 +1,187 @@
+/* Global Theme System for MINDWAVE Student Pages */
+
+:root {
+    /* Dark Theme (Default) */
+    --bg-primary: #0b0b0f;
+    --bg-secondary: #111319;
+    --bg-tertiary: #1c1f26;
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --bg-card-hover: rgba(255, 255, 255, 0.08);
+    
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-color-hover: rgba(255, 255, 255, 0.2);
+    
+    --text-primary: #f5f7ff;
+    --text-secondary: #9ea4b6;
+    --text-muted: #6b7280;
+    
+    --blue: #0f62fe;
+    --blue-hover: #0353e9;
+    --blue-light: rgba(15, 98, 254, 0.1);
+    
+    --success: #34c759;
+    --warning: #ff9f0a;
+    --error: #ff3b30;
+    
+    --shadow: rgba(0, 0, 0, 0.35);
+}
+
+body.light-theme {
+    /* Light Theme */
+    --bg-primary: #f5f7ff;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e8eaf0;
+    --bg-card: rgba(0, 0, 0, 0.03);
+    --bg-card-hover: rgba(0, 0, 0, 0.08);
+    
+    --border-color: rgba(0, 0, 0, 0.1);
+    --border-color-hover: rgba(0, 0, 0, 0.2);
+    
+    --text-primary: #0b0b0f;
+    --text-secondary: #5a5f6f;
+    --text-muted: #9ea4b6;
+    
+    --blue: #0f62fe;
+    --blue-hover: #0353e9;
+    --blue-light: rgba(15, 98, 254, 0.1);
+    
+    --success: #34c759;
+    --warning: #ff9f0a;
+    --error: #ff3b30;
+    
+    --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* Apply theme colors to body */
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Common element theming */
+.page-shell {
+    background: var(--bg-primary);
+}
+
+.panel,
+.game-card,
+.stat-card,
+.achievement-card,
+.activity-item,
+.skill-item,
+.settings-section,
+.leaderboard-table {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+.panel:hover,
+.game-card:hover,
+.stat-card:hover {
+    background: var(--bg-card-hover) !important;
+}
+
+/* Text colors */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+}
+
+p, span, div {
+    color: var(--text-primary);
+}
+
+.description,
+.lede,
+.intro-copy,
+small {
+    color: var(--text-secondary) !important;
+}
+
+/* Input fields */
+input,
+textarea,
+select {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--blue) !important;
+}
+
+/* Buttons */
+.primary-btn,
+.save-btn,
+.submit-btn {
+    background: var(--blue) !important;
+}
+
+.primary-btn:hover,
+.save-btn:hover,
+.submit-btn:hover {
+    background: var(--blue-hover) !important;
+}
+
+.ghost-btn,
+.secondary-btn,
+.cancel-btn {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Specific component overrides */
+.feed-item,
+.notification-item {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+.empty-state {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-secondary) !important;
+}
+
+/* Sidebar */
+nav.sidebar {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.team-card {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Main content area */
+.main {
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%) !important;
+}
+
+/* Dropdowns */
+.profile-dropdown,
+.notification-dropdown {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Question display for games */
+.question-display {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+.option-btn {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.option-btn:hover {
+    background: var(--bg-card-hover) !important;
+}

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDWAVE – Create SQL Builder</title>
+    <link rel="stylesheet" href="role-page.css">
+    <style>
+        .builder-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .sql-editor {
+            background: #1e1e1e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Fira Code', monospace;
+            color: #d4d4d4;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .blocks-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .sql-block {
+            background: var(--blue);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            cursor: grab;
+        }
+
+        .distractor-block {
+            background: #ff375f;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-shell">
+        <header class="hero">
+            <a class="ghost-link" href="admin.html">← Back to Dashboard</a>
+            <p class="eyebrow">Game Builder</p>
+            <h1>SQL Query Builder</h1>
+            <p class="lede">Define a data problem. Students must drag blocks to construct the correct SQL query.</p>
+        </header>
+
+        <div class="builder-container">
+            <form id="sqlForm">
+                <section class="panel-card" style="margin-bottom: 32px;">
+                    <div class="grid two">
+                        <div>
+                            <label for="gameTitle">Title</label>
+                            <input type="text" id="gameTitle" name="title" placeholder="e.g. Find Active Users"
+                                required>
+                        </div>
+                        <div>
+                            <label for="gameDuration">Time Limit (Minutes)</label>
+                            <input type="number" id="gameDuration" name="duration" placeholder="5" value="5">
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <label for="problemStatement">Problem Statement</label>
+                        <textarea id="problemStatement" name="description"
+                            placeholder="Write a query to select all users who logged in within the last 7 days..."
+                            rows="3" required></textarea>
+                    </div>
+                </section>
+
+                <section class="panel-card">
+                    <label>Correct SQL Query</label>
+                    <p style="font-size: 13px; color: #9ea4b6; margin-bottom: 12px;">Type the exact query. We will break
+                        it into blocks automatically.</p>
+                    <textarea class="sql-editor" id="correctQuery" name="query" rows="3"
+                        placeholder="SELECT * FROM users WHERE last_login > NOW() - INTERVAL 7 DAY" required></textarea>
+
+                    <div style="margin-top: 24px;">
+                        <label>Generated Blocks (Preview)</label>
+                        <div class="blocks-container" id="blocksPreview">
+                            <!-- Blocks appear here -->
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px;">
+                        <label>Add Distractor Blocks (Optional)</label>
+                        <div style="display: flex; gap: 12px;">
+                            <input type="text" id="distractorInput" placeholder="e.g. DELETE, DROP">
+                            <button type="button" class="secondary-btn" onclick="addDistractor()">Add</button>
+                        </div>
+                        <div class="blocks-container" id="distractorPreview">
+                            <!-- Distractors appear here -->
+                        </div>
+                    </div>
+                </section>
+
+                <div class="form-actions" style="margin-top: 32px;">
+                    <button type="button" class="secondary-btn"
+                        onclick="window.location.href='admin.html'">Cancel</button>
+                    <button type="submit" class="submit-btn">Publish Challenge</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const gamesKey = 'games';
+        const queryInput = document.getElementById('correctQuery');
+        const blocksPreview = document.getElementById('blocksPreview');
+        let distractors = [];
+
+        function loadData(key) {
+            try { return JSON.parse(localStorage.getItem(key) || '[]'); }
+            catch { return []; }
+        }
+
+        function saveData(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        function updateBlocks() {
+            const query = queryInput.value;
+            // Simple tokenizer: split by spaces, keeping quotes together if possible (simplified for now)
+            // For MVP, just split by space.
+            const blocks = query.split(/\s+/).filter(b => b.length > 0);
+
+            blocksPreview.innerHTML = blocks.map(b => `<div class="sql-block">${b}</div>`).join('');
+        }
+
+        function addDistractor() {
+            const input = document.getElementById('distractorInput');
+            const val = input.value.trim();
+            if (val && !distractors.includes(val)) {
+                distractors.push(val);
+                input.value = '';
+                renderDistractors();
+            }
+        }
+
+        function renderDistractors() {
+            const container = document.getElementById('distractorPreview');
+            container.innerHTML = distractors.map(d => `<div class="sql-block distractor-block">${d}</div>`).join('');
+        }
+
+        queryInput.addEventListener('input', updateBlocks);
+
+        document.getElementById('sqlForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = queryInput.value.trim();
+            if (!query) {
+                alert('Please enter a valid SQL query.');
+                return;
+            }
+
+            const blocks = query.split(/\s+/).filter(b => b.length > 0);
+
+            const formData = new FormData(e.target);
+            const gameData = {
+                id: Date.now().toString(),
+                type: 'sql-builder',
+                title: formData.get('title'),
+                description: formData.get('description'),
+                duration: parseInt(formData.get('duration')),
+                correctQuery: query,
+                blocks: blocks,
+                distractors: distractors,
+                totalPoints: 20, // Fixed points for SQL
+                createdAt: new Date().toISOString(),
+                status: 'active'
+            };
+
+            const games = loadData(gamesKey);
+            games.push(gameData);
+            saveData(gamesKey, games);
+
+            alert('SQL Challenge published successfully!');
+            window.location.href = 'admin.html';
+        });
+    </script>
+</body>
+
+</html>

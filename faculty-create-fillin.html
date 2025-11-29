@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDWAVE – Create Syntax Fill-in</title>
+    <link rel="stylesheet" href="role-page.css">
+    <style>
+        .builder-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .text-editor {
+            background: #1e1e1e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Fira Code', monospace;
+            color: #d4d4d4;
+            min-height: 200px;
+            width: 100%;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .preview-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 24px;
+            font-family: monospace;
+            line-height: 2;
+        }
+
+        .blank-preview {
+            display: inline-block;
+            background: rgba(15, 98, 254, 0.2);
+            border: 1px dashed var(--blue);
+            color: var(--blue);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-shell">
+        <header class="hero">
+            <a class="ghost-link" href="admin.html">← Back to Dashboard</a>
+            <p class="eyebrow">Game Builder</p>
+            <h1>Syntax Fill-in</h1>
+            <p class="lede">Write code or text and wrap keywords in [brackets] to create blanks.</p>
+        </header>
+
+        <div class="builder-container">
+            <form id="fillinForm">
+                <section class="panel-card" style="margin-bottom: 32px;">
+                    <div class="grid two">
+                        <div>
+                            <label for="gameTitle">Title</label>
+                            <input type="text" id="gameTitle" name="title" placeholder="e.g. Async/Await Syntax"
+                                required>
+                        </div>
+                        <div>
+                            <label for="gameDuration">Time Limit (Minutes)</label>
+                            <input type="number" id="gameDuration" name="duration" placeholder="5" value="5">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel-card">
+                    <label>Content Editor</label>
+                    <p style="font-size: 13px; color: #9ea4b6; margin-bottom: 12px;">Wrap words in [brackets] to turn
+                        them into blanks. Example: <code>const data = [await] fetch(url);</code></p>
+                    <textarea class="text-editor" id="contentEditor" name="content" placeholder="async function getData() {
+  const response = [await] fetch('https://api.com');
+  const data = await response.[json]();
+  return data;
+}"></textarea>
+
+                    <div class="preview-box" id="previewArea">
+                        <!-- Preview renders here -->
+                    </div>
+                </section>
+
+                <div class="form-actions" style="margin-top: 32px;">
+                    <button type="button" class="secondary-btn"
+                        onclick="window.location.href='admin.html'">Cancel</button>
+                    <button type="submit" class="submit-btn">Publish Challenge</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const gamesKey = 'games';
+        const editor = document.getElementById('contentEditor');
+        const preview = document.getElementById('previewArea');
+
+        function loadData(key) {
+            try { return JSON.parse(localStorage.getItem(key) || '[]'); }
+            catch { return []; }
+        }
+
+        function saveData(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        function updatePreview() {
+            const text = editor.value;
+            // Replace [word] with styled span
+            const html = text.replace(/\[(.*?)\]/g, '<span class="blank-preview">$1</span>')
+                .replace(/\n/g, '<br>');
+            preview.innerHTML = html || '<span style="color: #666;">Preview will appear here...</span>';
+        }
+
+        editor.addEventListener('input', updatePreview);
+        updatePreview();
+
+        document.getElementById('fillinForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = editor.value;
+
+            // Extract blanks
+            const matches = text.match(/\[(.*?)\]/g);
+            if (!matches || matches.length === 0) {
+                alert('Please create at least one blank using [brackets].');
+                return;
+            }
+
+            const blanks = matches.map(m => m.slice(1, -1)); // Remove brackets
+
+            const formData = new FormData(e.target);
+            const gameData = {
+                id: Date.now().toString(),
+                type: 'syntax-fill',
+                title: formData.get('title'),
+                duration: parseInt(formData.get('duration')),
+                content: text, // Raw content with brackets
+                blanks: blanks,
+                totalPoints: blanks.length * 10,
+                createdAt: new Date().toISOString(),
+                status: 'active'
+            };
+
+            const games = loadData(gamesKey);
+            games.push(gameData);
+            saveData(gamesKey, games);
+
+            alert('Syntax Game published successfully!');
+            window.location.href = 'admin.html';
+        });
+    </script>
+</body>
+
+</html>

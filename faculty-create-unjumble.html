@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDWAVE – Create Code Unjumble</title>
+    <link rel="stylesheet" href="role-page.css">
+    <style>
+        .builder-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .code-editor {
+            background: #1e1e1e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Fira Code', monospace;
+            color: #d4d4d4;
+            min-height: 300px;
+            width: 100%;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        .preview-lines {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .code-line {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            border-left: 3px solid var(--blue);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .line-number {
+            color: #569cd6;
+            font-size: 12px;
+            width: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-shell">
+        <header class="hero">
+            <a class="ghost-link" href="admin.html">← Back to Dashboard</a>
+            <p class="eyebrow">Game Builder</p>
+            <h1>Code Logic Unjumble</h1>
+            <p class="lede">Paste a working code snippet. Students will have to reorder the shuffled lines to make it
+                work.</p>
+        </header>
+
+        <div class="builder-container">
+            <form id="unjumbleForm">
+                <section class="panel-card" style="margin-bottom: 32px;">
+                    <div class="grid two">
+                        <div>
+                            <label for="gameTitle">Challenge Title</label>
+                            <input type="text" id="gameTitle" name="title"
+                                placeholder="e.g. Binary Search Implementation" required>
+                        </div>
+                        <div>
+                            <label for="gameDuration">Time Limit (Minutes)</label>
+                            <input type="number" id="gameDuration" name="duration" placeholder="10" value="10">
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <label for="gameDescription">Description</label>
+                        <textarea id="gameDescription" name="description"
+                            placeholder="Briefly describe the algorithm..." rows="2"></textarea>
+                    </div>
+                </section>
+
+                <section class="panel-card">
+                    <label>Source Code (Correct Order)</label>
+                    <p style="font-size: 13px; color: #9ea4b6; margin-bottom: 12px;">Paste the correct code below. Each
+                        line will become a draggable block.</p>
+                    <textarea class="code-editor" id="sourceCode" name="code" placeholder="// Paste your code here...
+function binarySearch(arr, target) {
+  let left = 0;
+  let right = arr.length - 1;
+  while (left <= right) {
+    // ...
+  }
+}"></textarea>
+                </section>
+
+                <div class="form-actions" style="margin-top: 32px;">
+                    <button type="button" class="secondary-btn"
+                        onclick="window.location.href='admin.html'">Cancel</button>
+                    <button type="submit" class="submit-btn">Publish Challenge</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const gamesKey = 'games';
+
+        function loadData(key) {
+            try { return JSON.parse(localStorage.getItem(key) || '[]'); }
+            catch { return []; }
+        }
+
+        function saveData(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        document.getElementById('unjumbleForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const rawCode = formData.get('code');
+
+            // Split code into lines, removing empty lines
+            const lines = rawCode.split('\n').filter(line => line.trim().length > 0);
+
+            if (lines.length < 2) {
+                alert('Please provide at least 2 lines of code.');
+                return;
+            }
+
+            const gameData = {
+                id: Date.now().toString(),
+                type: 'code-unjumble',
+                title: formData.get('title'),
+                description: formData.get('description'),
+                duration: parseInt(formData.get('duration')),
+                lines: lines, // This is the correct order
+                totalPoints: lines.length * 10,
+                createdAt: new Date().toISOString(),
+                status: 'active'
+            };
+
+            const games = loadData(gamesKey);
+            games.push(gameData);
+            saveData(gamesKey, games);
+
+            alert('Code Challenge published successfully!');
+            window.location.href = 'admin.html';
+        });
+    </script>
+</body>
+
+</html>

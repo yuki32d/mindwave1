@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDWAVE – Data Analytics</title>
+    <link rel="stylesheet" href="role-page.css">
+    <style>
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .insight-card {
+            background: rgba(15, 17, 27, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .insight-card h3 {
+            margin: 0 0 8px;
+            font-size: 16px;
+            color: #9ea4b6;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .insight-card strong {
+            display: block;
+            font-size: 34px;
+            letter-spacing: -0.02em;
+        }
+
+        .trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: #34c759;
+            margin-top: 8px;
+        }
+
+        .bar-meter {
+            margin-top: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #0f62fe, #8a3ffc);
+        }
+
+        .panel-section {
+            background: rgba(15, 17, 27, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .panel-section h2 {
+            margin: 0 0 12px;
+            font-size: 24px;
+        }
+
+        .panel-section p {
+            margin: 0 0 20px;
+            color: #9ea4b6;
+        }
+
+        .game-table,
+        .student-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .game-table th,
+        .game-table td,
+        .student-table th,
+        .student-table td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .game-table th,
+        .student-table th {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #9ea4b6;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+        }
+
+        .tag.pink {
+            background: rgba(255, 55, 95, 0.15);
+            color: #ff5b87;
+        }
+
+        .tag.blue {
+            background: rgba(15, 98, 254, 0.15);
+            color: #4da0ff;
+        }
+
+        .tag.green {
+            background: rgba(52, 199, 89, 0.2);
+            color: #34c759;
+        }
+
+        .consistency-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .consistency-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .consistency-item strong {
+            width: 140px;
+        }
+
+        .sparkline {
+            flex: 1;
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .sparkline-fill {
+            <form id="filterForm"><label for="timeRange">Time Range:</label><select id="timeRange" name="timeRange"><option value="all">All Time</option><option value="7">Last 7 Days</option><option value="30">Last 30 Days</option></select><br><br><label><input type="checkbox" id="topPerformerOnly" name="topPerformerOnly">Show Top Performers Only</label><br><label><input type="checkbox" id="engagementDetails" name="engagementDetails">Show Engagement Details</label><br><label><input type="checkbox" id="bottomLiners" name="bottomLiners">Show Bottom Performers</label></form></section><section class="panel-section"><h2>Game Performance Breakdown</h2><p>Track which experiences drive the most meaningful practice time.</p><table class="game-table"><thead><tr><th>Activity</th><th>Completions</th><th>Avg. Score</th><th>Avg. Time</th><th>Top Scorer</th></tr></thead><tbody id="gameBreakdownTable">< !-- Real-time data will populate here --></tbody></table></section><style>.highlight-green {
+                background-color: #e6f4ea;
+                color: #2e7d32;
+                font-weight: 600;
+            }
+
+            .highlight-red {
+                background-color: #fbe9e7;
+                color: #c62828;
+                font-weight: 600;
+            }
+
+            /* Added subtle border and shadow for filter panel */
+            #filterPanel {
+                border: 1px solid rgba(52, 199, 89, 0.3);
+                box-shadow: 0 8px 20px rgba(52, 199, 89, 0.2);
+            }
+    </style>
+
+    <section class="panel-section">
+        <h2>Top Performers</h2>
+        <p>Recognize the students leading by completions, average scores, and participation.</p>
+        <table class="student-table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Email</th>
+                    <th>Activities Completed</th>
+                    <th>Avg. Score</th>
+                    <th>Total Time</th>
+                </tr>
+            </thead>
+            <tbody id="topPerformersTable">
+                <!-- Real-time data will populate here -->
+            </tbody>
+        </table>
+    </section>
+
+    <section class="panel-section">
+        <h2>Individual Student Activity</h2>
+        <p>Complete breakdown of each student's performance and engagement metrics.</p>
+        <table class="student-table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Email</th>
+                    <th>Last Active</th>
+                    <th>Games Played</th>
+                    <th>Completion Rate</th>
+                </tr>
+            </thead>
+            <tbody id="studentActivityTable">
+                <!-- Real-time data will populate here -->
+            </tbody>
+        </table>
+    </section>
+    </div>
+
+    <script>
+        const activityKey = 'student_activities';
+        const usersKey = 'users';
+
+        function loadData(key) {
+            try {
+                return JSON.parse(localStorage.getItem(key) || '[]');
+            } catch (error) {
+                console.error('Failed to parse', key, error);
+                return [];
+            }
+        }
+
+        function formatTime(seconds) {
+            if (!seconds) return 'N/A';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+        }
+
+        function getAverageTime(activities) {
+            const completed = activities.filter(a => a.status === 'completed' && a.timeTaken);
+            if (completed.length === 0) return 0;
+            const sum = completed.reduce((acc, a) => acc + a.timeTaken, 0);
+            return Math.floor(sum / completed.length);
+        }
+
+        function getAverageScore(activities) {
+            const completed = activities.filter(a => a.status === 'completed' && a.score);
+            if (completed.length === 0) return 0;
+            const sum = completed.reduce((acc, a) => acc + a.score, 0);
+            return Math.floor(sum / completed.length);
+        }
+
+        function renderAnalytics() {
+            const activities = loadData(activityKey);
+            const totalCompleted = activities.filter(a => a.status === 'completed').length;
+            const totalPlayed = activities.length;
+
+            // Calculate engagement rate (unique students who played / total users)
+            const users = loadData(usersKey);
+            const uniqueStudents = [...new Set(activities.map(a => a.studentEmail))];
+            const engagementRate = users.length > 0 ? Math.floor((uniqueStudents.length / users.length) * 100) : 0;
+
+            // Get top performer
+            const studentStats = {};
+            activities.forEach(activity => {
+                if (!studentStats[activity.studentEmail]) {
+                    studentStats[activity.studentEmail] = {
+                        name: activity.studentName,
+                        completed: 0,
+                        totalScore: 0,
+                        count: 0
+                    };
+                }
+                if (activity.status === 'completed') {
+                    studentStats[activity.studentEmail].completed++;
+                    studentStats[activity.studentEmail].totalScore += activity.score || 0;
+                    studentStats[activity.studentEmail].count++;
+                }
+            });
+
+            const topPerformer = Object.entries(studentStats)
+                .sort((a, b) => b[1].totalScore - a[1].totalScore)[0];
+
+            // Consistent students (students who have completed at least 3 games)
+            const consistentStudents = Object.values(studentStats).filter(s => s.completed >= 3).length;
+
+            // Render analytics cards
+            const analyticsGrid = document.getElementById('analyticsGrid');
+            analyticsGrid.innerHTML = `
+                <article class="insight-card">
+                    <h3>Games Played</h3>
+                    <strong>${totalPlayed}</strong>
+                    <div class="trend">✓ Total attempts across all games</div>
+                    <div class="bar-meter">
+                        <div class="bar-fill" style="width: ${Math.min(100, (totalPlayed / 50) * 100)}%;"></div>
+                    </div>
+                </article>
+                <article class="insight-card">
+                    <h3>Total Engagement</h3>
+                    <strong>${engagementRate}%</strong>
+                    <div class="trend">▲ ${uniqueStudents.length} of ${users.length} students active</div>
+                    <div class="bar-meter">
+                        <div class="bar-fill" style="width: ${engagementRate}%;"></div>
+                    </div>
+                </article>
+                <article class="insight-card">
+                    <h3>Top Performer</h3>
+                    <strong>${topPerformer ? topPerformer[1].name : 'N/A'}</strong>
+                    <div class="trend">🏆 ${topPerformer ? topPerformer[1].totalScore : 0} total points</div>
+                    <div class="bar-meter">
+                        <div class="bar-fill" style="width: ${topPerformer ? Math.min(100, (topPerformer[1].totalScore / 500) * 100) : 0}%;"></div>
+                    </div>
+                </article>
+                <article class="insight-card">
+                    <h3>Consistent Students</h3>
+                    <strong>${consistentStudents}</strong>
+                    <div class="trend">✓ Completed 3+ games</div>
+                    <div class="bar-meter">
+                        <div class="bar-fill" style="width: ${Math.min(100, (consistentStudents / users.length) * 100)}%;"></div>
+                    </div>
+                </article>
+            `;
+        }
+
+        function renderGameBreakdown() {
+            const activities = loadData(activityKey);
+            const gameStats = {};
+
+            activities.forEach(activity => {
+                if (!gameStats[activity.gameId]) {
+                    gameStats[activity.gameId] = {
+                        title: activity.gameTitle,
+                        type: activity.gameType,
+                        completions: 0,
+                        scores: [],
+                        times: [],
+                        students: {}
+                    };
+                }
+                if (activity.status === 'completed') {
+                    gameStats[activity.gameId].completions++;
+                    if (activity.score) gameStats[activity.gameId].scores.push(activity.score);
+                    if (activity.timeTaken) gameStats[activity.gameId].times.push(activity.timeTaken);
+                    if (!gameStats[activity.gameId].students[activity.studentEmail] ||
+                        (gameStats[activity.gameId].students[activity.studentEmail].score || 0) < activity.score) {
+                        gameStats[activity.gameId].students[activity.studentEmail] = {
+                            name: activity.studentName,
+                            score: activity.score
+                        };
+                    }
+                }
+            });
+
+            const gameBreakdownTable = document.getElementById('gameBreakdownTable');
+
+            if (Object.keys(gameStats).length === 0) {
+                gameBreakdownTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #9ea4b6;">No game data available yet</td></tr>';
+                return;
+            }
+
+            gameBreakdownTable.innerHTML = Object.entries(gameStats)
+                .sort((a, b) => b[1].completions - a[1].completions)
+                .map(([id, stats]) => {
+                    const avgScore = stats.scores.length > 0
+                        ? Math.floor(stats.scores.reduce((a, b) => a + b, 0) / stats.scores.length)
+                        : 0;
+                    const avgTime = stats.times.length > 0
+                        ? Math.floor(stats.times.reduce((a, b) => a + b, 0) / stats.times.length)
+                        : 0;
+                    const topScorer = Object.values(stats.students)
+                        .sort((a, b) => b.score - a.score)[0];
+
+                    return `
+                        <tr>
+                            <td><span class="tag blue">${stats.title}</span></td>
+                            <td>${stats.completions}</td>
+                            <td>${avgScore}%</td>
+                            <td>${formatTime(avgTime)}</td>
+                            <td>${topScorer ? `${topScorer.name} (${topScorer.score}%)` : 'N/A'}</td>
+                        </tr>
+                    `;
+                }).join('');
+        }
+
+        function renderTopPerformers() {
+            const activities = loadData(activityKey);
+            const studentStats = {};
+
+            activities.forEach(activity => {
+                if (!studentStats[activity.studentEmail]) {
+                    studentStats[activity.studentEmail] = {
+                        name: activity.studentName,
+                        email: activity.studentEmail,
+                        completed: 0,
+                        scores: [],
+                        totalTime: 0
+                    };
+                }
+                if (activity.status === 'completed') {
+                    studentStats[activity.studentEmail].completed++;
+                    if (activity.score) studentStats[activity.studentEmail].scores.push(activity.score);
+                    if (activity.timeTaken) studentStats[activity.studentEmail].totalTime += activity.timeTaken;
+                }
+            });
+
+            const topPerformersTable = document.getElementById('topPerformersTable');
+            const sortedStudents = Object.values(studentStats)
+                .filter(s => s.completed > 0)
+                .sort((a, b) => {
+                    const avgA = a.scores.length > 0 ? a.scores.reduce((x, y) => x + y, 0) / a.scores.length : 0;
+                    const avgB = b.scores.length > 0 ? b.scores.reduce((x, y) => x + y, 0) / b.scores.length : 0;
+                    return avgB - avgA;
+                })
+                .slice(0, 10);
+
+            if (sortedStudents.length === 0) {
+                topPerformersTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #9ea4b6;">No student activity yet</td></tr>';
+                return;
+            }
+
+            topPerformersTable.innerHTML = sortedStudents.map(student => {
+                const avgScore = student.scores.length > 0
+                    ? Math.floor(student.scores.reduce((a, b) => a + b, 0) / student.scores.length)
+                    : 0;
+                return `
+                    <tr>
+                        <td><strong>${student.name}</strong></td>
+                        <td>${student.email}</td>
+                        <td>${student.completed}</td>
+                        <td>${avgScore}%</td>
+                        <td>${formatTime(student.totalTime)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderStudentActivity() {
+            const activities = loadData(activityKey);
+            const studentStats = {};
+
+            activities.forEach(activity => {
+                if (!studentStats[activity.studentEmail]) {
+                    studentStats[activity.studentEmail] = {
+                        name: activity.studentName,
+                        email: activity.studentEmail,
+                        lastActive: activity.startedAt,
+                        total: 0,
+                        completed: 0
+                    };
+                }
+                studentStats[activity.studentEmail].total++;
+                if (activity.status === 'completed') {
+                    studentStats[activity.studentEmail].completed++;
+                }
+                // Update last active
+                if (new Date(activity.startedAt) > new Date(studentStats[activity.studentEmail].lastActive)) {
+                    studentStats[activity.studentEmail].lastActive = activity.startedAt;
+                }
+            });
+
+            const studentActivityTable = document.getElementById('studentActivityTable');
+            const sortedStudents = Object.values(studentStats)
+                .sort((a, b) => new Date(b.lastActive) - new Date(a.lastActive));
+
+            if (sortedStudents.length === 0) {
+                studentActivityTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #9ea4b6;">No student activity tracked yet</td></tr>';
+                return;
+            }
+
+            studentActivityTable.innerHTML = sortedStudents.map(student => {
+                const completionRate = student.total > 0
+                    ? Math.floor((student.completed / student.total) * 100)
+                    : 0;
+                const lastActive = new Date(student.lastActive).toLocaleString();
+                return `
+                    <tr>
+                        <td><strong>${student.name}</strong></td>
+                        <td>${student.email}</td>
+                        <td>${lastActive}</td>
+                        <td>${student.total}</td>
+                        <td>${completionRate}%</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateDashboard() {
+            renderAnalytics();
+            renderGameBreakdown();
+            renderTopPerformers();
+            renderStudentActivity();
+        }
+
+        // Initial load
+        updateDashboard();
+
+        // Filter panel toggle
+        const filterToggleBtn = document.getElementById('filterToggleBtn');
+        const filterPanel = document.getElementById('filterPanel');
+
+        filterToggleBtn.addEventListener('click', () => {
+            const isHidden = filterPanel.style.display === 'none';
+            filterPanel.style.display = isHidden ? 'block' : 'none';
+        });
+
+        const filterForm = document.getElementById('filterForm');
+
+        // Function to get filter values from UI
+        function getFilters() {
+            return {
+                timeRange: filterForm.timeRange.value,
+                topPerformerOnly: filterForm.topPerformerOnly.checked,
+                engagementDetails: filterForm.engagementDetails.checked,
+                bottomLiners: filterForm.bottomLiners.checked
+            };
+        }
+
+        // Filter activities by time range in days
+        function filterByTimeRange(activities, days) {
+            if (days === 'all') return activities;
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - Number(days));
+            return activities.filter(activity => new Date(activity.startedAt) >= cutoff);
+        }
+
+        // Helper to find top and bottom performers for highlighting
+        function getTopAndBottomPerformers(studentStats) {
+            const studentsArray = Object.entries(studentStats);
+            const sortedByScore = studentsArray.sort((a, b) => b[1].avgScore - a[1].avgScore);
+            const topPerformers = sortedByScore.slice(0, 3).map(s => s[0]);
+            const bottomPerformers = sortedByScore.slice(-3).map(s => s[0]);
+            return { topPerformers, bottomPerformers };
+        }
+
+        // Modified renderTopPerformers with filtering and highlighting
+        function renderTopPerformers() {
+            const filters = getFilters();
+            let activities = loadData(activityKey);
+
+            // Apply time range filter
+            activities = filterByTimeRange(activities, filters.timeRange);
+
+            const studentStats = {};
+
+            activities.forEach(activity => {
+                if (!studentStats[activity.studentEmail]) {
+                    studentStats[activity.studentEmail] = {
+                        name: activity.studentName,
+                        email: activity.studentEmail,
+                        completed: 0,
+                        scores: [],
+                        totalTime: 0
+                    };
+                }
+                if (activity.status === 'completed') {
+                    studentStats[activity.studentEmail].completed++;
+                    if (activity.score) studentStats[activity.studentEmail].scores.push(activity.score);
+                    if (activity.timeTaken) studentStats[activity.studentEmail].totalTime += activity.timeTaken;
+                }
+            });
+
+            let students = Object.values(studentStats).filter(s => s.completed > 0);
+            if (filters.topPerformerOnly) {
+                // filter only top performers - keep top 10 by avg score
+                students = students.sort((a, b) => {
+                    const avgA = a.scores.length > 0 ? a.scores.reduce((x, y) => x + y, 0) / a.scores.length : 0;
+                    const avgB = b.scores.length > 0 ? b.scores.reduce((x, y) => x + y, 0) / b.scores.length : 0;
+                    return avgB - avgA;
+                }).slice(0, 10);
+            }
+
+            const topPerformersTable = document.getElementById('topPerformersTable');
+            if (students.length === 0) {
+                topPerformersTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #9ea4b6;">No student activity yet</td></tr>';
+                return;
+            }
+
+            const topAndBottom = getTopAndBottomPerformers(
+                Object.fromEntries(
+                    students.map(s => [s.email, {
+                        avgScore: s.scores.length > 0 ? s.scores.reduce((x, y) => x + y, 0) / s.scores.length : 0
+                    }])
+                )
+            );
+
+            topPerformersTable.innerHTML = students.map(student => {
+                const avgScore = student.scores.length > 0
+                    ? Math.floor(student.scores.reduce((a, b) => a + b, 0) / student.scores.length)
+                    : 0;
+                let highlightClass = '';
+                if (topAndBottom.topPerformers.includes(student.email)) highlightClass = 'highlight-green';
+                if (topAndBottom.bottomPerformers.includes(student.email)) highlightClass = 'highlight-red';
+
+                return `
+                <tr class="${highlightClass}">
+                    <td><strong>${student.name}</strong></td>
+                    <td>${student.email}</td>
+                    <td>${student.completed}</td>
+                    <td>${avgScore}%</td>
+                    <td>${formatTime(student.totalTime)}</td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        // Modified renderStudentActivity with filtering and highlighting bottom performers
+        function renderStudentActivity() {
+            const filters = getFilters();
+            let activities = loadData(activityKey);
+
+            // Apply time range filter
+            activities = filterByTimeRange(activities, filters.timeRange);
+
+            const studentStats = {};
+
+            activities.forEach(activity => {
+                if (!studentStats[activity.studentEmail]) {
+                    studentStats[activity.studentEmail] = {
+                        name: activity.studentName,
+                        email: activity.studentEmail,
+                        lastActive: activity.startedAt,
+                        total: 0,
+                        completed: 0,
+                        scores: []
+                    };
+                }
+                studentStats[activity.studentEmail].total++;
+                if (activity.status === 'completed') {
+                    studentStats[activity.studentEmail].completed++;
+                    if (activity.score) studentStats[activity.studentEmail].scores.push(activity.score);
+                }
+                // Update last active
+                if (new Date(activity.startedAt) > new Date(studentStats[activity.studentEmail].lastActive)) {
+                    studentStats[activity.studentEmail].lastActive = activity.startedAt;
+                }
+            });
+
+            let students = Object.values(studentStats);
+
+            if (filters.engagementDetails) {
+                // Show "Highly Engaged" students: Completion Rate > 70%
+                students = students.filter(s => {
+                    const rate = s.total > 0 ? (s.completed / s.total) * 100 : 0;
+                    return rate > 70;
+                });
+            }
+
+            if (filters.bottomLiners) {
+                // Show only bottom performers by average score (bottom 10)
+                const bottomSorted = students.filter(s => s.completed > 0).sort((a, b) => {
+                    const avgA = a.scores.length > 0 ? a.scores.reduce((x, y) => x + y, 0) / a.scores.length : 0;
+                    const avgB = b.scores.length > 0 ? b.scores.reduce((x, y) => x + y, 0) / b.scores.length : 0;
+                    return avgA - avgB;
+                }).slice(0, 10);
+                students = bottomSorted;
+            }
+
+
+            const studentActivityTable = document.getElementById('studentActivityTable');
+            const sortedStudents = filters.bottomLiners ? students : students.sort((a, b) => new Date(b.lastActive) - new Date(a.lastActive));
+
+            if (sortedStudents.length === 0) {
+                studentActivityTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #9ea4b6;">No student activity tracked yet</td></tr>';
+                return;
+            }
+
+            const topAndBottom = getTopAndBottomPerformers(
+                Object.fromEntries(
+                    students.map(s => [s.email, {
+                        avgScore: s.scores.length > 0 ? s.scores.reduce((x, y) => x + y, 0) / s.scores.length : 0
+                    }])
+                )
+            );
+
+            studentActivityTable.innerHTML = sortedStudents.map(student => {
+                const completionRate = student.total > 0
+                    ? Math.floor((student.completed / student.total) * 100)
+                    : 0;
+                const lastActive = new Date(student.lastActive).toLocaleString();
+
+                let highlightClass = '';
+                if (topAndBottom.topPerformers.includes(student.email)) highlightClass = 'highlight-green';
+                if (topAndBottom.bottomPerformers.includes(student.email)) highlightClass = 'highlight-red';
+
+                return `
+                    <tr class="${highlightClass}">
+                        <td><strong>${student.name}</strong></td>
+                        <td>${student.email}</td>
+                        <td>${lastActive}</td>
+                        <td>${student.total}</td>
+                        <td>${completionRate}%</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Hook filter change event to refresh dashboard
+        filterForm.addEventListener('change', () => {
+            updateDashboard();
+        });
+
+        // Real-time updates every 3 seconds including filters
+        setInterval(updateDashboard, 3000);
+    </script>
+    </body>
+
+</html>

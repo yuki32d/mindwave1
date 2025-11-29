@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up – Mindwave</title>
+    <style>
+        :root {
+            --blue: #0f62fe;
+            --purple: #8a3ffc;
+            --dark: #03040a;
+            --card-bg: rgba(15, 17, 27, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #f5f6fb;
+            --muted: #9ea4b6;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at top right, rgba(143, 115, 255, 0.35), transparent 55%),
+                radial-gradient(circle at bottom left, rgba(15, 98, 254, 0.35), transparent 50%),
+                #02030a;
+            color: var(--text);
+            padding: 32px;
+        }
+
+        .auth-shell {
+            width: min(960px, 100%);
+            background: rgba(3, 5, 15, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+        }
+
+        .auth-hero {
+            padding: 48px;
+            background: linear-gradient(160deg, rgba(15, 98, 254, 0.25), rgba(138, 63, 252, 0.25));
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .auth-hero h1 {
+            margin: 0 0 12px;
+            font-size: 34px;
+        }
+
+        .auth-hero p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .auth-card {
+            padding: 48px 40px;
+            background: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .auth-card h2 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .form-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .role-selection {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .role-selection label {
+            flex: 1 1 90px;
+            min-width: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .role-selection input {
+            margin-right: 6px;
+        }
+
+        .primary-btn {
+            border: none;
+            border-radius: 16px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(120deg, var(--blue), var(--purple));
+            cursor: pointer;
+            transition: transform 200ms ease, box-shadow 200ms ease;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(15, 98, 254, 0.35);
+        }
+
+        .auth-links {
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .auth-links a {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .auth-links a:hover {
+            color: var(--blue);
+        }
+
+        @media (max-width: 720px) {
+
+            .auth-card,
+            .auth-hero {
+                padding: 32px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-shell">
+        <section class="auth-hero">
+            <p style="letter-spacing: 0.3em; text-transform: uppercase; font-size: 12px; color: var(--muted);">Mindwave
+            </p>
+            <h1>Create your account</h1>
+            <p>Plug into interactive classrooms, challenge drops, and community rituals. Every signup is verified
+                against campus email for security.</p>
+        </section>
+        <section class="auth-card">
+            <div>
+                <h2>Join the pilot</h2>
+                <p style="color: var(--muted); margin: 6px 0 0;">All users require a valid @cmrit.ac.in identity.</p>
+            </div>
+            <form id="signup-form" class="form-grid">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" placeholder="Full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Campus Email</label>
+                    <input type="email" id="email" placeholder="admin.mca@cmrit.ac.in" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Create a password" minlength="8" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <div class="role-selection">
+                        <label><input type="radio" name="role" value="student"> Student</label>
+                        <label><input type="radio" name="role" value="admin" checked> Admin</label>
+                    </div>
+                </div>
+                <button type="submit" class="primary-btn">Create account</button>
+                <div class="auth-links">
+                    Already have an account? <a href="login.html">Login</a>
+                </div>
+            </form>
+        </section>
+    </div>
+    <script>
+        let API_BASE = window.location.origin;
+        (async () => {
+            if (window.location.protocol === 'file:') {
+                const host = '127.0.0.1';
+                const ports = [8080, 8081, 8082, 8083, 8084];
+                for (const p of ports) {
+                    try {
+                        const res = await fetch(`http://${host}:${p}/`);
+                        if (res.ok) { API_BASE = `http://${host}:${p}`; break; }
+                    } catch { }
+                }
+            }
+        })();
+
+        // Check for Registration Gate
+        const regOpen = localStorage.getItem('registrationOpen');
+        if (regOpen === 'false') {
+            document.querySelector('.auth-card').innerHTML = `
+                <div style="text-align: center; padding: 24px;">
+                    <h2 style="margin-bottom: 16px;">🚫 Registration Closed</h2>
+                    <p style="color: var(--muted);">New signups are currently disabled by the faculty.</p>
+                    <a href="login.html" class="primary-btn" style="display: inline-block; margin-top: 24px; text-decoration: none;">Back to Login</a>
+                </div>
+            `;
+        }
+        const STUDENT_EMAIL_REGEX = /\.mca25@cmrit\.ac\.in$/i;
+        const ADMIN_EMAIL_REGEX = /\.mca@cmrit\.ac\.in$/i;
+
+        function updatePlaceholder() {
+            const role = document.querySelector('input[name="role"]:checked').value;
+            const emailInput = document.getElementById('email');
+            emailInput.placeholder = role === 'student'
+                ? 'student.mca25@cmrit.ac.in'
+                : 'admin.mca@cmrit.ac.in';
+        }
+
+        updatePlaceholder();
+
+        document.querySelectorAll('input[name="role"]').forEach(radio => {
+            radio.addEventListener('change', updatePlaceholder);
+        });
+
+        document.getElementById('signup-form').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value.trim();
+            const role = document.querySelector('input[name="role"]:checked').value;
+
+            const emailValid = role === 'admin'
+                ? ADMIN_EMAIL_REGEX.test(email)
+                : STUDENT_EMAIL_REGEX.test(email);
+            if (!emailValid) {
+                alert('Invalid Email Address. Only campus emails are accepted.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ name, email, password, role })
+                });
+                const data = await response.json();
+
+                if (!data.ok) {
+                    alert(data.message || 'Unable to sign up.');
+                    return;
+                }
+
+                alert('Sign up successful! You can log in now.');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error(error);
+                alert('Unable to sign up. Please try again.');
+            }
+        });
+    </script>
+</body>
+
+</html>
