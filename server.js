@@ -244,7 +244,7 @@ app.use(cookieParser());
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Serve static files (HTML, CSS, JS, images) from the root directory
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, { index: false }));
 
 const authLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -300,7 +300,7 @@ function authMiddleware(req, res, next) {
 }
 
 app.get("/", (_req, res) => {
-  res.json({ ok: true, message: "Mindwave API running" });
+  res.redirect("/login.html");
 });
 
 async function createAdminNotification(message, meta = {}) {
