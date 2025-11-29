@@ -211,6 +211,16 @@ const Subject = mongoose.model("Subject", subjectSchema);
 const Material = mongoose.model("Material", materialSchema);
 const Notification = mongoose.model("Notification", notificationSchema);
 
+const announcementSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  body: { type: String, required: true },
+  audience: { type: String, default: 'All Students' },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const Announcement = mongoose.model("Announcement", announcementSchema);
+
 
 const app = express();
 const allowedOrigins = new Set([
@@ -540,6 +550,82 @@ app.get("/api/games/my", authMiddleware, async (req, res) => {
     res.json({ ok: true, games });
   } catch (error) {
     console.error("Get my games error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+app.delete("/api/games/:id", authMiddleware, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ ok: false, message: "Only admins can delete games" });
+  }
+  try {
+    const game = await Game.findById(req.params.id);
+    if (!game) {
+      return res.status(404).json({ ok: false, message: "Game not found" });
+    }
+    if (game.createdBy.toString() !== req.user.sub) {
+      return res.status(403).json({ ok: false, message: "You can only delete your own games" });
+    }
+    await Game.findByIdAndDelete(req.params.id);
+    res.json({ ok: true, message: "Game deleted successfully" });
+  } catch (error) {
+    console.error("Delete game error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Announcement Endpoints
+app.post("/api/announcements", authMiddleware, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ ok: false, message: "Only admins can create announcements" });
+  }
+  const { title, body, audience } = req.body;
+  if (!title || !body) {
+    return res.status(400).json({ ok: false, message: "Title and body are required" });
+  }
+  try {
+    const announcement = await Announcement.create({
+      title,
+      body,
+      audience,
+      createdBy: req.user.sub
+    });
+
+    // Create notification for students
+    await Notification.create({
+      recipientRole: 'student',
+      title: `New Announcement: ${title}`,
+      message: body.substring(0, 50) + (body.length > 50 ? '...' : ''),
+      type: 'info',
+      link: '/student-dashboard.html'
+    });
+
+    res.status(201).json({ ok: true, announcement });
+  } catch (error) {
+    console.error("Create announcement error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+app.get("/api/announcements", async (req, res) => {
+  try {
+    const announcements = await Announcement.find().sort({ createdAt: -1 }).limit(20);
+    res.json({ ok: true, announcements });
+  } catch (error) {
+    console.error("Get announcements error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+app.delete("/api/announcements/:id", authMiddleware, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ ok: false, message: "Only admins can delete announcements" });
+  }
+  try {
+    await Announcement.findByIdAndDelete(req.params.id);
+    res.json({ ok: true, message: "Announcement deleted" });
+  } catch (error) {
+    console.error("Delete announcement error:", error);
     res.status(500).json({ ok: false, message: "Server error" });
   }
 });

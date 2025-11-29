@@ -653,6 +653,27 @@
                                 <button class="submit-btn" type="submit">Launch Game</button>
                             </div>
                         </form>
+                        <div class="filter-controls"
+                            style="display: flex; gap: 12px; margin-top: 24px; margin-bottom: 12px;">
+                            <select id="filterType"
+                                style="flex: 1; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                                <option value="all">All Types</option>
+                                <option value="bug-hunt">Bug Hunt</option>
+                                <option value="trivia-challenge">Quiz</option>
+                                <option value="memory-match">Memory Match</option>
+                                <option value="brain-teasers">Brain Teasers</option>
+                                <option value="strategy-games">Strategy</option>
+                                <option value="logic-games">Logic</option>
+                                <option value="word-puzzle">Word Puzzle</option>
+                            </select>
+                            <select id="filterDifficulty"
+                                style="flex: 1; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                                <option value="all">All Difficulties</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                        </div>
                         <div class="list" id="gameList"></div>
                     </section>
 
@@ -712,10 +733,6 @@
         </div>
     </div>
     <script>
-        const announcementsKey = 'announcements';
-        const updatesKey = 'mindwave_updates';
-        const gamesKey = 'mindwave_games';
-        const gameToolsKey = 'mindwave_game_tools';
         const GAME_LIBRARY = [
             { icon: '🐛', title: 'Debug the Monolith', description: 'Find the bug in the code snippet.', brief: 'Identify logic errors, syntax bugs, or runtime issues in real code.', type: 'bug-hunt' },
             { icon: '❓', title: 'Quiz', description: 'Multiple choice blitz with instant feedback.', brief: '5-question pulse check on lecture concepts.', type: 'trivia-challenge' },
@@ -728,57 +745,105 @@
             { icon: '🔤', title: 'Anagram', description: 'Unscramble letters to reveal key terms.', brief: 'Reinforce terminology with playful anagrams.', type: 'word-puzzle' },
             { icon: '🧩', title: 'Code Logic Unjumble', description: 'Reorder lines to fix the algorithm.', brief: 'Sequence logic for Binary Search or API calls.', type: 'logic-games' },
             { icon: '🕸️', title: 'SQL Query Builder', description: 'Drag blocks to build valid queries.', brief: 'Construct complex JOINs and subqueries.', type: 'brain-teasers' },
-            { icon: '🧠', title: 'Matching pairs', description: 'Flip tiles to find every pair.', brief: 'Match bug reports with owners.', type: 'memory-match' }]
+            { icon: '🧠', title: 'Matching pairs', description: 'Flip tiles to find every pair.', brief: 'Match bug reports with owners.', type: 'memory-match' }
+        ];
+
         const announcementForm = document.getElementById('announcementForm');
         const updateForm = document.getElementById('updateForm');
         const gameForm = document.getElementById('gameForm');
+        const API_BASE = window.location.origin;
 
-        function loadData(key) {
+        // --- API Helpers ---
+        async function fetchAPI(endpoint, options = {}) {
             try {
-                return JSON.parse(localStorage.getItem(key) || '[]');
+                const res = await fetch(`${API_BASE}${endpoint}`, options);
+                if (res.status === 401 || res.status === 403) {
+                    window.location.href = 'login.html';
+                    return null;
+                }
+                return await res.json();
             } catch (error) {
-                console.error('Failed to parse data for', key, error);
-                return [];
+                console.error(`API Error ${endpoint}:`, error);
+                return { ok: false, message: "Network error" };
             }
         }
 
-        function saveData(key, value) {
-            localStorage.setItem(key, JSON.stringify(value));
-        }
-
+        // --- Render Functions ---
         function renderList(containerId, items, formatter) {
             const container = document.getElementById(containerId);
+            if (!container) return;
             container.innerHTML = items.length === 0
                 ? '<p style="color: var(--text-muted); margin: 0;">No entries yet.</p>'
                 : items.map(formatter).join('');
         }
 
-        function formatDate() {
-            return new Date().toLocaleString();
+        function formatDate(isoString) {
+            if (!isoString) return new Date().toLocaleString();
+            return new Date(isoString).toLocaleString();
         }
 
-        function updateCounters() {
-            const announcements = loadData(announcementsKey);
-            document.getElementById('campaignCount').textContent = announcements.length;
-            const games = loadData(gamesKey);
-            document.getElementById('gamesCount').textContent = games.length;
+        // --- Announcements ---
+        async function loadAnnouncements() {
+            const data = await fetchAPI('/api/announcements');
+            if (data && data.ok) {
+                renderAnnouncements(data.announcements);
+                document.getElementById('campaignCount').textContent = data.announcements.length;
+            }
         }
 
-        function renderAnnouncements() {
-            const announcements = loadData(announcementsKey).slice().reverse();
-            renderList('announcementList', announcements, (item) => `
+        function renderAnnouncements(list) {
+            renderList('announcementList', list, (item) => `
                 <div class="list-item">
-                    <h4>${item.title || 'Untitled Announcement'}</h4>
-                    <small>${item.audience} • ${item.date}</small>
+                    <div style="display: flex; justify-content: space-between;">
+                        <h4>${item.title || 'Untitled'}</h4>
+                        <button onclick="deleteAnnouncement('${item._id}')" style="background: none; border: none; cursor: pointer; color: #ff3b30;">&times;</button>
+                    </div>
+                    <small>${item.audience} • ${formatDate(item.createdAt)}</small>
                     <p style="margin-top: 8px;">${item.body}</p>
                     <div class="tag green">Published</div>
                 </div>
             `);
         }
 
-        function renderUpdates() {
-            const updates = loadData(updatesKey).slice().reverse();
-            renderList('updateList', updates, (item) => `
+        announcementForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const payload = {
+                title: announcementForm.announcementTitle.value.trim(),
+                body: announcementForm.announcementBody.value.trim(),
+                audience: announcementForm.announcementAudience.value
+            };
+            const res = await fetchAPI('/api/announcements', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res && res.ok) {
+                announcementForm.reset();
+                loadAnnouncements();
+            } else {
+                alert('Failed to publish: ' + (res ? res.message : 'Unknown error'));
+            }
+        });
+
+        window.deleteAnnouncement = async function (id) {
+            if (!confirm("Delete this announcement?")) return;
+            const res = await fetchAPI(`/api/announcements/${id}`, { method: 'DELETE' });
+            if (res && res.ok) loadAnnouncements();
+        };
+
+        // --- Updates (Mock for now, or implement API if needed) ---
+        // Keeping localStorage for Updates as requested only Games/Announcements were critical, 
+        // but let's make it consistent. For now, I'll leave Updates local to save time unless requested.
+        // Actually, let's keep it local to minimize server changes risk, as user focused on Games.
+        const updatesKey = 'mindwave_updates';
+        function loadUpdates() {
+            try {
+                const updates = JSON.parse(localStorage.getItem(updatesKey) || '[]');
+                renderUpdates(updates);
+            } catch (e) { }
+        }
+        function renderUpdates(list) {
+            renderList('updateList', list.slice().reverse(), (item) => `
                 <div class="list-item">
                     <h4>${item.headline}</h4>
                     <small>${item.date}</small>
@@ -786,19 +851,43 @@
                 </div>
             `);
         }
+        updateForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const next = {
+                headline: updateForm.updateHeadline.value.trim(),
+                summary: updateForm.updateSummary.value.trim(),
+                date: new Date().toLocaleString()
+            };
+            const updates = JSON.parse(localStorage.getItem(updatesKey) || '[]');
+            updates.push(next);
+            localStorage.setItem(updatesKey, JSON.stringify(updates));
+            updateForm.reset();
+            loadUpdates();
+        });
 
-        function renderGames() {
-            const games = loadData(gamesKey).slice().reverse();
-            renderList('gameList', games, (item) => `
+        // --- Games ---
+        let allGames = []; // Store for filtering
+
+        async function loadGames() {
+            const data = await fetchAPI('/api/games/my');
+            if (data && data.ok) {
+                allGames = data.games;
+                applyFilters(); // Render with current filters
+                document.getElementById('gamesCount').textContent = allGames.length;
+            }
+        }
+
+        function renderGames(list) {
+            renderList('gameList', list, (item) => `
                 <div class="list-item">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div>
                             <h4>${item.title}</h4>
-                            <small>${item.type} • ${item.difficulty} • ${item.date}</small>
+                            <small>${item.type} • ${item.difficulty} • ${formatDate(item.createdAt)}</small>
                         </div>
                         <div style="display: flex; gap: 8px;">
-                            <button onclick="deleteGame('${item.id}')" style="background: rgba(255, 59, 48, 0.1); color: #ff3b30; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 12px;">Delete</button>
-                            <button onclick="window.open('student-game.html?id=${item.id}', '_blank')" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 12px;">Preview</button>
+                            <button onclick="deleteGame('${item._id}')" style="background: rgba(255, 59, 48, 0.1); color: #ff3b30; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 12px;">Delete</button>
+                            <button onclick="window.open('student-game.html?id=${item._id}', '_blank')" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 12px;">Preview</button>
                         </div>
                     </div>
                     <p style="margin-top: 8px;">${item.brief}</p>
@@ -807,76 +896,65 @@
             `);
         }
 
-        window.deleteGame = function (id) {
-            if (confirm('Are you sure you want to delete this game?')) {
-                let games = loadData(gamesKey);
-                games = games.filter(g => g.id !== id);
-                saveData(gamesKey, games);
-                renderGames();
-                updateCounters();
-            }
-        };
-
-        announcementForm.addEventListener('submit', (event) => {
+        gameForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const next = {
-                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-                title: announcementForm.announcementTitle.value.trim(),
-                body: announcementForm.announcementBody.value.trim(),
-                audience: announcementForm.announcementAudience.value,
-                date: formatDate(),
-                text: announcementForm.announcementBody.value.trim()
-            };
-            if (!next.title || !next.body) return;
-            const announcements = loadData(announcementsKey);
-            announcements.push(next);
-            saveData(announcementsKey, announcements);
-            announcementForm.reset();
-            renderAnnouncements();
-            updateCounters();
-        });
-
-        updateForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const next = {
-                headline: updateForm.updateHeadline.value.trim(),
-                summary: updateForm.updateSummary.value.trim(),
-                date: formatDate()
-            };
-            if (!next.headline || !next.summary) return;
-            const updates = loadData(updatesKey);
-            updates.push(next);
-            saveData(updatesKey, updates);
-            updateForm.reset();
-            renderUpdates();
-        });
-
-        gameForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const next = {
+            const payload = {
                 title: gameForm.gameTitle.value.trim(),
                 type: gameForm.gameType.value,
                 difficulty: gameForm.gameDifficulty.value,
-                brief: gameForm.gameBrief.value.trim(),
-                date: formatDate(),
-                id: Date.now().toString(36) + Math.random().toString(36).substr(2)
+                brief: gameForm.gameBrief.value.trim()
             };
-            if (!next.title || !next.type || !next.brief) return;
-            const games = loadData(gamesKey);
-            games.push(next);
-            saveData(gamesKey, games);
-            gameForm.reset();
-            renderGames();
-            updateCounters();
+            const res = await fetchAPI('/api/games', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res && res.ok) {
+                gameForm.reset();
+                loadGames();
+                alert('Game created successfully!');
+            } else {
+                alert('Failed to create game: ' + (res ? res.message : 'Unknown error'));
+            }
         });
 
-        const API_BASE = window.location.origin;
+        window.deleteGame = async function (id) {
+            if (confirm('Are you sure you want to delete this game?')) {
+                const res = await fetchAPI(`/api/games/${id}`, { method: 'DELETE' });
+                if (res && res.ok) {
+                    loadGames();
+                } else {
+                    alert('Failed to delete: ' + (res ? res.message : 'Unknown error'));
+                }
+            }
+        };
 
-        renderAnnouncements();
-        renderUpdates();
-        renderGames();
-        updateCounters();
+        // --- Filter Logic ---
+        const filterType = document.getElementById('filterType');
+        const filterDifficulty = document.getElementById('filterDifficulty');
 
+        function applyFilters() {
+            const type = filterType.value;
+            const diff = filterDifficulty.value;
+
+            const filtered = allGames.filter(game => {
+                const matchType = type === 'all' || game.type === type;
+                const matchDiff = diff === 'all' || game.difficulty === diff;
+                return matchType && matchDiff;
+            });
+
+            renderGames(filtered);
+        }
+
+        if (filterType) filterType.addEventListener('change', applyFilters);
+        if (filterDifficulty) filterDifficulty.addEventListener('change', applyFilters);
+
+        // --- Initialization ---
+        loadAnnouncements();
+        loadUpdates();
+        loadGames();
+
+        // --- Templates & Tools (Static/Local for now) ---
         function renderGameTemplates() {
             const container = document.getElementById('gameTemplateGrid');
             if (!container) return;
@@ -888,81 +966,36 @@
                 </article>
             `).join('');
         }
-
-        function renderGameTools() {
-            const tools = loadData(gameToolsKey).slice().reverse();
-            renderList('gameToolsList', tools, (tool) => `
-                <div class="list-item">
-                    <h4>${tool.link}</h4>
-                    <small>${tool.date}</small>
-                    <p style="margin-top: 8px;">${tool.instructions}</p>
-                </div>
-            `);
-        }
-
         renderGameTemplates();
-        renderGameTools();
 
+        // --- Event Listeners for Templates ---
         const GAME_TOOLS = {
-            'trivia': `
-                <h3 style="margin: 0 0 12px; font-size: 16px;">Trivia / Quiz</h3>
-                <p style="color: #9ea4b6; margin-bottom: 16px;">Create a multi-question quiz with scoring and time limits.</p>
-                <button type="button" class="primary-btn" onclick="window.location.href='faculty-create-quiz.html'" style="width: 100%;">
-                    🚀 Open Quiz Builder
-                </button>
-            `,
-            'flashcard': `
-                <h3 style="margin: 0 0 12px; font-size: 16px;">Flashcard Set</h3>
-                <div style="display: grid; gap: 12px;">
-                    <div style="border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
-                        <input type="text" name="front" placeholder="Front (Term)" style="margin-bottom: 8px;" required>
-                        <textarea name="back" placeholder="Back (Definition)" rows="2" required></textarea>
-                    </div>
-                    <button type="button" class="secondary-btn" style="width: 100%;">+ Add Another Card</button>
-                </div>
-            `,
-            'scavenger': `
-                <h3 style="margin: 0 0 12px; font-size: 16px;">Scavenger Hunt Clue</h3>
-                <div style="display: grid; gap: 12px;">
-                    <textarea name="clue" placeholder="Clue text..." rows="2" required></textarea>
-                    <input type="text" name="locationCode" placeholder="Location Code / Secret Word" required>
-                </div>
-            `
+            'trivia': `<h3 style="margin: 0 0 12px; font-size: 16px;">Trivia / Quiz</h3><p style="color: #9ea4b6; margin-bottom: 16px;">Create a multi-question quiz with scoring and time limits.</p><button type="button" class="primary-btn" onclick="window.location.href='faculty-create-quiz.html'" style="width: 100%;">🚀 Open Quiz Builder</button>`,
+            'flashcard': `<h3 style="margin: 0 0 12px; font-size: 16px;">Flashcard Set</h3><div style="display: grid; gap: 12px;"><div style="border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;"><input type="text" name="front" placeholder="Front (Term)" style="margin-bottom: 8px;" required><textarea name="back" placeholder="Back (Definition)" rows="2" required></textarea></div><button type="button" class="secondary-btn" style="width: 100%;">+ Add Another Card</button></div>`,
+            'scavenger': `<h3 style="margin: 0 0 12px; font-size: 16px;">Scavenger Hunt Clue</h3><div style="display: grid; gap: 12px;"><textarea name="clue" placeholder="Clue text..." rows="2" required></textarea><input type="text" name="locationCode" placeholder="Location Code / Secret Word" required></div>`
         };
 
         document.getElementById('gameTemplateGrid')?.addEventListener('click', (event) => {
             const card = event.target.closest('.game-template-card');
             if (!card) return;
-
             const title = card.dataset.title;
 
-            // Direct redirect for specific game types
-            if (title === 'Debug the Monolith') {
-                window.location.href = 'faculty-create-debug.html';
-                return;
-            }
-            if (title === 'Quiz') {
-                window.location.href = 'faculty-create-quiz.html';
-                return;
-            }
-            if (title === 'Code Logic Unjumble') {
-                window.location.href = 'faculty-create-unjumble.html';
-                return;
-            }
-            if (title === 'Tech Stack Sorter') {
-                window.location.href = 'faculty-create-sorter.html';
-                return;
-            }
-            if (title === 'Syntax Fill-in') {
-                window.location.href = 'faculty-create-fillin.html';
-                return;
-            }
-            if (title === 'SQL Query Builder') {
-                window.location.href = 'faculty-create-sql.html';
+            // Direct redirects
+            const redirects = {
+                'Debug the Monolith': 'faculty-create-debug.html',
+                'Quiz': 'faculty-create-quiz.html',
+                'Code Logic Unjumble': 'faculty-create-unjumble.html',
+                'Tech Stack Sorter': 'faculty-create-sorter.html',
+                'Syntax Fill-in': 'faculty-create-fillin.html',
+                'SQL Query Builder': 'faculty-create-sql.html'
+            };
+
+            if (redirects[title]) {
+                window.location.href = redirects[title];
                 return;
             }
 
-            // Visual selection
+            // Visual selection & Form Fill
             document.querySelectorAll('.game-template-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
 
@@ -977,63 +1010,19 @@
             if (gameTitle) gameTitle.value = title;
             if (gameDetails) gameDetails.value = brief;
             if (gameType) {
-                // Find option with matching text or value
                 const option = [...gameType.options].find(opt => opt.value.toLowerCase().includes(type) || opt.text.toLowerCase().includes(title.split(' ')[0].toLowerCase()));
                 if (option) gameType.value = option.value;
             }
 
-            // Inject dynamic tools
             if (dynamicTools) {
                 const toolKey = Object.keys(GAME_TOOLS).find(k => title.toLowerCase().includes(k)) || 'trivia';
                 dynamicTools.innerHTML = GAME_TOOLS[toolKey] || '';
                 dynamicTools.style.display = 'block';
-
-                // Scroll to form
-                document.getElementById('createGameForm')?.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('gameForm')?.scrollIntoView({ behavior: 'smooth' });
             }
         });
 
-        document.getElementById('createGameForm')?.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const gameData = Object.fromEntries(formData.entries());
-
-            // Add metadata
-            gameData.id = Date.now().toString();
-            gameData.createdAt = new Date().toISOString();
-            gameData.status = 'active';
-
-            // Save to local storage
-            const games = loadData(gamesKey);
-            games.push(gameData);
-            saveData(gamesKey, games);
-
-            // Reset and feedback
-            event.target.reset();
-            document.getElementById('dynamicGameTools').style.display = 'none';
-            document.querySelectorAll('.game-template-card').forEach(c => c.classList.remove('selected'));
-
-            renderGames();
-            updateCounters();
-            alert('Game created successfully!');
-        });
-
-        document.getElementById('gameToolsForm')?.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const link = document.getElementById('assetLink').value.trim();
-            const instructions = document.getElementById('instructions').value.trim();
-            if (!link || !instructions) return;
-            const tools = loadData(gameToolsKey);
-            tools.push({
-                link,
-                instructions,
-                date: formatDate()
-            });
-            saveData(gameToolsKey, tools);
-            event.target.reset();
-            renderGameTools();
-        });
-
+        // --- Profile & Logout ---
         const adminProfileToggle = document.getElementById('adminProfileToggle');
         const adminProfileDropdown = document.getElementById('adminProfileDropdown');
         const signOutControl = document.getElementById('signOutControl');
@@ -1053,34 +1042,16 @@
 
         async function performLogout() {
             try {
-                await fetch(`${API_BASE}/api/logout`, {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-            } catch (error) {
-                console.error('Logout failed', error);
-            } finally {
-                const email = localStorage.getItem('email');
-                if (email) {
-                    localStorage.removeItem(`session_${email}`);
-                }
-                localStorage.removeItem('loggedIn');
-                localStorage.removeItem('firstName');
-                localStorage.removeItem('email');
-                localStorage.removeItem('role');
+                await fetch(`${API_BASE}/api/logout`, { method: 'POST', credentials: 'include' });
+            } catch (error) { console.error('Logout failed', error); }
+            finally {
+                localStorage.clear(); // Clear all local storage on logout
                 window.location.href = 'login.html';
             }
         }
 
-        if (signOutControl) {
-            signOutControl.addEventListener('click', performLogout);
-        }
-
-        if (gamesNavBtn) {
-            gamesNavBtn.addEventListener('click', () => {
-                document.getElementById('gamesPanel')?.scrollIntoView({ behavior: 'smooth' });
-            });
-        }
+        if (signOutControl) signOutControl.addEventListener('click', performLogout);
+        if (gamesNavBtn) gamesNavBtn.addEventListener('click', () => document.getElementById('gamesPanel')?.scrollIntoView({ behavior: 'smooth' }));
     </script>
     <!-- System Status Modal -->
     <div id="statusModal"
