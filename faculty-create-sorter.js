@@ -88,7 +88,7 @@ document.getElementById('itemsContainer').addEventListener('click', (e) => {
 // Add initial item row
 addItemRow();
 
-document.getElementById('sorterForm').addEventListener('submit', (e) => {
+document.getElementById('sorterForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     if (categories.length < 2) {
@@ -114,21 +114,34 @@ document.getElementById('sorterForm').addEventListener('submit', (e) => {
 
     const formData = new FormData(e.target);
     const gameData = {
-        id: Date.now().toString(),
         type: 'tech-sorter',
         title: formData.get('title'),
         duration: parseInt(formData.get('duration')),
         categories: categories,
         items: gameItems,
         totalPoints: gameItems.length * 10,
-        createdAt: new Date().toISOString(),
-        status: 'active'
+        status: 'active',
+        published: true
     };
 
-    const games = loadData(gamesKey);
-    games.push(gameData);
-    saveData(gamesKey, games);
+    try {
+        const response = await fetch('/api/games', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(gameData)
+        });
 
-    alert('Sorter Game published successfully!');
-    window.location.href = 'admin.html';
+        if (response.ok) {
+            alert('Sorter Game published successfully!');
+            window.location.href = 'admin.html';
+        } else {
+            const error = await response.json();
+            alert('Failed to publish game: ' + (error.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error('Error publishing game:', err);
+        alert('Failed to publish game. Please check your connection.');
+    }
 });

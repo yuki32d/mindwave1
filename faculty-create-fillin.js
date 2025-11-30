@@ -22,7 +22,7 @@ function updatePreview() {
 editor.addEventListener('input', updatePreview);
 updatePreview();
 
-document.getElementById('fillinForm').addEventListener('submit', (e) => {
+document.getElementById('fillinForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const text = editor.value;
 
@@ -37,21 +37,34 @@ document.getElementById('fillinForm').addEventListener('submit', (e) => {
 
     const formData = new FormData(e.target);
     const gameData = {
-        id: Date.now().toString(),
         type: 'syntax-fill',
         title: formData.get('title'),
         duration: parseInt(formData.get('duration')),
         content: text, // Raw content with brackets
         blanks: blanks,
         totalPoints: blanks.length * 10,
-        createdAt: new Date().toISOString(),
-        status: 'active'
+        status: 'active',
+        published: true
     };
 
-    const games = loadData(gamesKey);
-    games.push(gameData);
-    saveData(gamesKey, games);
+    try {
+        const response = await fetch('/api/games', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(gameData)
+        });
 
-    alert('Syntax Game published successfully!');
-    window.location.href = 'admin.html';
+        if (response.ok) {
+            alert('Syntax Game published successfully!');
+            window.location.href = 'admin.html';
+        } else {
+            const error = await response.json();
+            alert('Failed to publish game: ' + (error.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error('Error publishing game:', err);
+        alert('Failed to publish game. Please check your connection.');
+    }
 });

@@ -126,10 +126,29 @@ const gameSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     type: { type: String, required: true },
-    difficulty: { type: String, required: true },
-    brief: { type: String, required: true },
+    difficulty: { type: String, default: 'Normal' },
+    brief: { type: String }, // Short description
+    description: { type: String }, // Full description
     published: { type: Boolean, default: false },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+
+    // Game Specific Data
+    duration: { type: Number, default: 10 },
+    totalPoints: { type: Number, default: 100 },
+    questions: { type: Array, default: [] }, // For Quiz
+    items: { type: Array, default: [] }, // For Sorter
+    categories: { type: Array, default: [] }, // For Sorter
+    blanks: { type: Array, default: [] }, // For Fill-in
+    content: { type: String }, // For Fill-in
+    perfectCode: { type: String }, // For Debug
+    buggyCode: { type: String }, // For Debug
+    bugCount: { type: Number }, // For Debug
+    bugs: { type: Array, default: [] }, // For Debug
+    explanation: { type: String }, // For Debug
+    language: { type: String }, // For Debug
+    blocks: { type: Array, default: [] }, // For SQL
+    distractors: { type: Array, default: [] }, // For SQL
+    correctQuery: { type: String } // For SQL
   },
   { timestamps: true }
 );
@@ -496,25 +515,40 @@ app.post("/api/password/reset", authLimiter, async (req, res) => {
 
 // Game endpoints
 app.post("/api/games", authMiddleware, async (req, res) => {
-  const { title, type, difficulty, brief } = req.body || {};
-  if (!title || !type || !difficulty || !brief) {
-    return res.status(400).json({ ok: false, message: "All game fields are required" });
+  const body = req.body || {};
+  const { title, type } = body;
+
+  if (!title || !type) {
+    return res.status(400).json({ ok: false, message: "Title and Type are required" });
   }
+
   if (req.user.role !== "admin") {
     return res.status(403).json({ ok: false, message: "Only admins can create games" });
   }
+
   try {
-    const game = await Game.create({
-      title,
-      type,
-      difficulty,
-      brief,
+    console.log('Received game creation request:', { title, type, body });
+
+    const gameData = {
+      ...body,
+      brief: body.brief || body.description || 'No description',
+      description: body.description || body.brief || 'No description',
+      difficulty: body.difficulty || 'Normal',
+      published: body.published || body.status === 'active' || false,
       createdBy: req.user.sub
-    });
+    };
+
+    // Remove _id and id if present to let Mongo generate it
+    delete gameData._id;
+    delete gameData.id;
+
+    console.log('Creating game with data:', gameData);
+    const game = await Game.create(gameData);
+    console.log('Game created successfully:', game._id);
     res.status(201).json({ ok: true, game });
   } catch (error) {
     console.error("Game creation error:", error);
-    res.status(500).json({ ok: false, message: "Server error" });
+    res.status(500).json({ ok: false, message: "Server error: " + error.message });
   }
 });
 

@@ -203,21 +203,19 @@
             </div>
         </div>
 
-        <!-- Filter Tabs -->
-        <div class="filter-tabs"
-            style="display: flex; gap: 12px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px;">
-            <button onclick="filterGames('all')" class="filter-btn active"
-                style="background: rgba(255,255,255,0.1); border: none; padding: 8px 16px; border-radius: 99px; color: white; cursor: pointer;">All</button>
-            <button onclick="filterGames('quiz')" class="filter-btn"
-                style="background: transparent; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 99px; color: #9ea4b6; cursor: pointer;">Quizzes</button>
-            <button onclick="filterGames('logic')" class="filter-btn"
-                style="background: transparent; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 99px; color: #9ea4b6; cursor: pointer;">Logic</button>
-            <button onclick="filterGames('builder')" class="filter-btn"
-                style="background: transparent; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 99px; color: #9ea4b6; cursor: pointer;">Builders</button>
+        <!-- Filters -->
+        <div class="filter-bar"
+            style="margin-bottom: 24px; display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px;">
+            <button class="filter-btn active" data-filter="all">All Games</button>
+            <button class="filter-btn" data-filter="quiz">Quizzes</button>
+            <button class="filter-btn" data-filter="bug-hunt">Bug Hunts</button>
+            <button class="filter-btn" data-filter="tech-sorter">Tech Sorters</button>
+            <button class="filter-btn" data-filter="syntax-fill">Syntax Fill</button>
         </div>
 
-        <div class="game-container" id="appContainer">
-            <!-- Content injected here -->
+        <!-- Game Grid Container -->
+        <div id="appContainer" class="game-grid">
+            <!-- Games will be injected here -->
         </div>
     </div>
 

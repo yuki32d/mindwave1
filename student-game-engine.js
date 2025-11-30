@@ -20,22 +20,56 @@ function saveData(key, data) {
 const urlParams = new URLSearchParams(window.location.search);
 const gameId = urlParams.get('id');
 
-if (gameId) {
-    initGamePlayer(gameId);
-} else {
-    initGameLobby();
-}
+document.addEventListener('DOMContentLoaded', () => {
+    if (gameId) {
+        initGamePlayer(gameId);
+    } else {
+        initGameLobby();
+    }
 
-function initGameLobby() {
+    // Setup filter listeners
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const type = e.target.dataset.filter;
+            filterGames(type, e.target);
+        });
+    });
+});
+
+async function initGameLobby() {
     updatePlayerStats();
-    const games = loadData(gamesKey).reverse();
-    window.allGames = games;
-    renderGameList(games);
-}
+    const container = document.getElementById('appContainer');
+    container.innerHTML = '<div style="text-align:center; padding: 40px; color: #9ea4b6;">Loading games...</div>';
 
+    try {
+        console.log('Fetching games from API...');
+        const res = await fetch('/api/games/published?t=' + Date.now()); // Cache busting
+        const data = await res.json();
+        console.log('API Response:', data);
+
+        if (data.ok) {
+            const games = (data.games || []).reverse(); // Show newest first
+            window.allGames = games;
+            renderGameList(games);
+        } else {
+            throw new Error(data.message || 'Failed to load games');
+        }
+    } catch (error) {
+        console.error('Failed to load games:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 48px; color: #ff3b30;">
+                <h2>Failed to load games</h2>
+                <p>Please check your connection and try again.</p>
+            </div>
+                <p>Check back later for new assignments.</p>
+            </div>
+        `;
+    }
+}
 
 function renderGameList(games) {
     const container = document.getElementById('appContainer');
+    if (!container) return;
 
     if (games.length === 0) {
         container.innerHTML = `
@@ -48,29 +82,41 @@ function renderGameList(games) {
     }
 
     container.innerHTML = games.map(game => `
-        <article class="game-card" onclick="window.location.href='?id=${game.id}'">
+        <article class="game-card" data-id="${game._id || game.id}">
             <div style="display: flex; justify-content: space-between; align-items: start;">
                 <h3>${game.title}</h3>
                 <span class="meta-tag">${getGameMeta(game)}</span>
             </div>
-            <p>${game.description || 'No description provided.'}</p>
+            <p>${game.brief || game.description || 'No description provided.'}</p>
             <div style="display: flex; gap: 12px; font-size: 13px; color: #9ea4b6;">
-                <span>⏱️ ${game.duration || 10} mins</span>
+                <span>⏱️ ${game.difficulty || 'Normal'}</span>
                 <span>🎮 ${formatGameType(game.type)}</span>
             </div>
         </article>
     `).join('');
+
+    // Add click listeners to cards
+    container.querySelectorAll('.game-card').forEach(card => {
+        card.addEventListener('click', () => {
+            window.location.href = `?id=${card.dataset.id}`;
+        });
+    });
 }
 
-window.filterGames = function (type) {
+function filterGames(type, targetBtn) {
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.style.background = 'transparent';
         btn.style.color = '#9ea4b6';
         btn.style.border = '1px solid rgba(255,255,255,0.1)';
     });
-    event.target.style.background = 'rgba(255,255,255,0.1)';
-    event.target.style.color = 'white';
-    event.target.style.border = 'none';
+
+    if (targetBtn) {
+        targetBtn.style.background = 'rgba(255,255,255,0.1)';
+        targetBtn.style.color = 'white';
+        targetBtn.style.border = 'none';
+    }
+
+    if (!window.allGames) return;
 
     if (type === 'all') return renderGameList(window.allGames);
 
@@ -85,22 +131,32 @@ window.filterGames = function (type) {
 
 function updatePlayerStats() {
     const activities = loadData(activityKey);
-    const totalScore = activities.reduce((acc, curr) => acc + (curr.rawScore || 0), 0);
-    const wins = activities.length;
+    const totalScore = activities.reduce((acc, curr) => acc + (curr.score || curr.rawScore || 0), 0);
+    const wins = activities.filter(a => a.status === 'completed').length;
 
     const level = Math.floor(Math.sqrt(totalScore / 100)) + 1;
     const nextLevelXP = Math.pow(level, 2) * 100;
     const currentLevelBaseXP = Math.pow(level - 1, 2) * 100;
     const progress = ((totalScore - currentLevelBaseXP) / (nextLevelXP - currentLevelBaseXP)) * 100;
 
-    document.getElementById('playerLevel').textContent = level;
-    document.getElementById('currentXP').textContent = totalScore + ' XP';
-    document.getElementById('nextLevelXP').textContent = nextLevelXP + ' XP';
-    document.getElementById('xpBar').style.width = Math.max(0, Math.min(100, progress)) + '%';
-    document.getElementById('totalWins').textContent = wins;
+    const levelEl = document.getElementById('playerLevel');
+    if (levelEl) levelEl.textContent = level;
+
+    const xpEl = document.getElementById('currentXP');
+    if (xpEl) xpEl.textContent = totalScore + ' XP';
+
+    const nextXpEl = document.getElementById('nextLevelXP');
+    if (nextXpEl) nextXpEl.textContent = nextLevelXP + ' XP';
+
+    const barEl = document.getElementById('xpBar');
+    if (barEl) barEl.style.width = Math.max(0, Math.min(100, progress)) + '%';
+
+    const winsEl = document.getElementById('totalWins');
+    if (winsEl) winsEl.textContent = wins;
 
     const ranks = ['Novice', 'Apprentice', 'Scholar', 'Expert', 'Master', 'Grandmaster'];
-    document.getElementById('playerRank').textContent = ranks[Math.min(level - 1, ranks.length - 1)];
+    const rankEl = document.getElementById('playerRank');
+    if (rankEl) rankEl.textContent = ranks[Math.min(level - 1, ranks.length - 1)];
 }
 
 function getGameMeta(game) {
@@ -123,64 +179,79 @@ function formatGameType(type) {
     return 'Challenge';
 }
 
-function initGamePlayer(gameId) {
-    const games = loadData(gamesKey);
-    const game = games.find(g => g.id === gameId);
-
-    if (!game) {
-        alert('Game not found!');
-        window.location.href = 'student-game.html';
-        return;
-    }
-
-    document.getElementById('pageTitle').textContent = game.title;
-    document.getElementById('pageDesc').textContent = game.description || 'Complete the challenge to earn points.';
-    const backLink = document.getElementById('backLink');
-    backLink.href = 'student-game.html';
-    backLink.textContent = '← Quit Game';
-
+async function initGamePlayer(gameId) {
     const container = document.getElementById('appContainer');
+    container.innerHTML = '<div style="text-align:center; padding: 40px; color: #9ea4b6;">Loading game...</div>';
 
     try {
-        switch (game.type) {
-            case 'quiz':
-                playQuiz(game, container);
-                break;
-            case 'unjumble':
-            case 'code-unjumble':
-                playUnjumble(game, container);
-                break;
-            case 'sorter':
-            case 'tech-sorter':
-                playSorter(game, container);
-                break;
-            case 'fillin':
-            case 'syntax-fill':
-                playFillIn(game, container);
-                break;
-            case 'sql':
-            case 'sql-builder':
-                playSQL(game, container);
-                break;
-            case 'bug-hunt':
-                playDebug(game, container);
-                break;
-            default:
-                if (game.questions) {
-                    playQuiz(game, container);
-                } else {
-                    container.innerHTML = '<p>Unknown game type.</p>';
-                }
+        // We need to fetch all published games to find this one, or ideally we'd have a single game endpoint
+        // For now, let's reuse the published games endpoint as it's safer than adding a new one right now
+        const res = await fetch('/api/games/published');
+        const data = await res.json();
+
+        if (!data.ok) throw new Error('Failed to load game data');
+
+        const games = data.games || [];
+        const game = games.find(g => (g._id === gameId || g.id === gameId));
+
+        if (!game) {
+            alert('Game not found!');
+            window.location.href = 'student-game.html';
+            return;
         }
-    } catch (err) {
-        console.error('Game Error:', err);
-        container.innerHTML = `
-            <div class="error-message">
-                <h3>Something went wrong</h3>
-                <p>We couldn't load this game. Error: ${err.message}</p>
-                <button class="secondary-btn" onclick="window.location.reload()" style="margin-top: 12px; background: rgba(0,0,0,0.2); border: 1px solid white; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Try Again</button>
-            </div>
-        `;
+
+        document.getElementById('pageTitle').textContent = game.title;
+        document.getElementById('pageDesc').textContent = game.brief || game.description || 'Complete the challenge to earn points.';
+        const backLink = document.getElementById('backLink');
+        backLink.href = 'student-game.html';
+        backLink.textContent = '← Quit Game';
+
+        container.innerHTML = ''; // Clear loading message
+
+        try {
+            switch (game.type) {
+                case 'quiz':
+                    playQuiz(game, container);
+                    break;
+                case 'unjumble':
+                case 'code-unjumble':
+                    playUnjumble(game, container);
+                    break;
+                case 'sorter':
+                case 'tech-sorter':
+                    playSorter(game, container);
+                    break;
+                case 'fillin':
+                case 'syntax-fill':
+                    playFillIn(game, container);
+                    break;
+                case 'sql':
+                case 'sql-builder':
+                    playSQL(game, container);
+                    break;
+                case 'bug-hunt':
+                    playDebug(game, container);
+                    break;
+                default:
+                    if (game.questions) {
+                        playQuiz(game, container);
+                    } else {
+                        container.innerHTML = '<p>Unknown game type.</p>';
+                    }
+            }
+        } catch (err) {
+            console.error('Game Error:', err);
+            container.innerHTML = `
+                <div class="error-message">
+                    <h3>Something went wrong</h3>
+                    <p>We couldn't load this game. Error: ${err.message}</p>
+                    <button class="secondary-btn" onclick="window.location.reload()" style="margin-top: 12px; background: rgba(0,0,0,0.2); border: 1px solid white; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Try Again</button>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Failed to init game:', error);
+        container.innerHTML = '<div class="error-message">Failed to load game. Please try again.</div>';
     }
 }
 

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDWAVE – Engagement Hub</title>
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme-init.js"></script>
+    <style>
+        :root {
+            --blue: #0f62fe;
+            --dark: #0b0b0f;
+            --gray-900: #111319;
+            --gray-800: #1c1f26;
+            --gray-700: #2a2e39;
+            --text-primary: #f5f7ff;
+            --text-muted: #9ea4b6;
+            --card-radius: 16px;
+            --transition: 200ms ease;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            background: var(--dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header.topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            height: 64px;
+            background: var(--blue);
+            font-weight: 600;
+        }
+
+        .topbar-brand {
+            font-size: 20px;
+            letter-spacing: 0.02em;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 20px;
+            position: relative;
+        }
+
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ff375f;
+            color: white;
+            border-radius: 999px;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 0 4px;
+            box-shadow: 0 2px 8px rgba(255, 55, 95, 0.4);
+        }
+
+        .notification-badge.hidden {
+            display: none;
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: #151722;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            min-width: 320px;
+            max-width: 400px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            display: none;
+            flex-direction: column;
+            z-index: 30;
+        }
+
+        .notification-dropdown.show {
+            display: flex;
+        }
+
+        .notification-item {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+
+        .notification-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background: rgba(15, 98, 254, 0.1);
+        }
+
+        .notification-item h4 {
+            margin: 0 0 4px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .notification-item p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+        }
+
+        .notification-item small {
+            display: block;
+            margin-top: 6px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .profile-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.15);
+            font-size: 14px;
+        }
+
+        .profile-toggle span {
+            font-size: 18px;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: #151722;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            min-width: 160px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 20;
+        }
+
+        .profile-dropdown a,
+        .profile-dropdown button {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            text-align: left;
+            padding: 12px 16px;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .profile-dropdown a:hover,
+        .profile-dropdown button:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .layout {
+            display: flex;
+            flex: 1;
+            min-height: calc(100vh - 64px);
+        }
+
+        nav.sidebar {
+            width: 220px;
+            background: #0f1118;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .team-card {
+            background: var(--gray-800);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .team-card h4 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .menu li {
+            border-radius: 10px;
+        }
+
+        .menu a {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: inherit;
+            font: inherit;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        .menu li.active a,
+        .menu a:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .menu .icon {
+            font-size: 16px;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px 48px;
+            background: linear-gradient(180deg, #050507 0%, #0f1117 100%);
+            overflow-y: auto;
+        }
+
+        .main-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .main-header h1 {
+            margin: 0;
+            font-size: 32px;
+            letter-spacing: -0.01em;
+        }
+
+        .primary-btn {
+            background: #fff;
+            color: #0b0d15;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(15, 98, 254, 0.35);
+        }
+
+        .intro-copy {
+            color: var(--text-muted);
+            max-width: 480px;
+            line-height: 1.5;
+        }
+
+        .ghost-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: inherit;
+            border-radius: 999px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .feed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .panel {
+            background: var(--gray-900);
+            border-radius: var(--card-radius);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+        }
+
+        .panel h2 {
+            margin: 0 0 12px;
+            font-size: 22px;
+        }
+
+        .panel p.description {
+            margin: 0 0 20px;
+            color: var(--text-muted);
+        }
+
+        .feed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feed-item {
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .feed-item h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .feed-item small {
+            color: var(--text-muted);
+        }
+
+        .feed-item p {
+            margin: 8px 0 0;
+            color: #d5d9ea;
+            line-height: 1.4;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 4px 12px;
+            margin-top: 8px;
+        }
+
+        .tag.pink {
+            background: rgba(255, 55, 95, 0.18);
+            color: #ff5b87;
+        }
+
+        .tag.blue {
+            background: rgba(15, 98, 254, 0.18);
+            color: var(--blue);
+        }
+
+        .tag.green {
+            background: rgba(52, 199, 89, 0.2);
+            color: #34c759;
+        }
+
+        .games-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .game-card {
+            padding: 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .game-card h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .game-card p {
+            margin: 8px 0 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .empty-state {
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(255, 255, 255, 0.12);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        @media (max-width: 960px) {
+            nav.sidebar {
+                display: none;
+            }
+
+            .main {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="topbar-brand">MindwaveIo</div>
+            <div class="topbar-actions">
+                <div class="notification-bell" id="notificationBell" style="position: relative;">
+                    <span>🔔</span>
+                    <span class="notification-badge hidden" id="notificationBadge">0</span>
+                    <div class="notification-dropdown" id="notificationDropdown"></div>
+                </div>
+                <span>⚙️</span>
+                <div class="profile-toggle" id="profileToggle">
+                    <span>👤</span>
+                    <small>Account</small>
+                </div>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <a href="student-profile.html">Profile</a>
+                    <button type="button" id="signOutBtn">Sign out</button>
+                </div>
+            </div>
+        </header>
+        <div class="layout">
+            <nav class="sidebar">
+                <div class="team-card">
+                    <h4>MindwaveIo Devs</h4>
+                </div>
+                <ul class="menu">
+                    <li class="active"><a href="student-dashboard.html"><span class="icon">🏠</span>Dashboard</a></li>
+                    <li> <a href="student-leaderboard.html"><span class="icon">🏆</span>Leaderboard</a></li>
+                    <li><a href="student-courses.html"><span class="icon">📚</span>Courses</a></li>
+                    <li><a href="student-community.html"><span class="icon">👥</span>Community</a></li>
+                    <li><a href="student-game.html"><span class="icon">🎯</span>Games</a></li>
+                </ul>
+                <div class="sidebar-footer">
+                    <a class="ghost-btn" style="width: 100%;" href="student-help.html">❔ Help</a>
+                    <a class="ghost-btn" style="width: 100%;" href="student-settings.html">⚙️ Settings</a>
+                </div>
+            </nav>
+            <main class="main">
+                <div class="main-header">
+                    <div>
+                        <h1>Engagement Feed</h1>
+                        <p class="intro-copy">Track every announcement, update, and game drop from this student view.
+                            Use the navigation to dive deeper into each area.</p>
+                    </div>
+                </div>
+                <section class="feed-grid">
+                    <div class="panel">
+                        <h2>Announcements</h2>
+                        <p class="description">Stay in sync with your faculty. Everything new lands here first.</p>
+                        <div class="feed-list" id="announcementFeed"></div>
+                    </div>
+                    <div class="panel">
+                        <h2>Updates</h2>
+                        <p class="description">Weekly progress notes, sprint retros, and action items.</p>
+                        <div class="feed-list" id="updateFeed"></div>
+                    </div>
+                </section>
+                <section class="panel" style="margin-top: 32px;">
+                    <h2>Playground Dropzone</h2>
+                    <p class="description">Jump into the latest interactive challenges curated for you.</p>
+                    <div class="games-list" id="gameFeed"></div>
+                </section>
+            </main>
+        </div>
+    </div>
+    <script src="homepage.js"></script>
+    const API_BASE = window.location.origin;
+    const announcementsKey = 'announcements';
+    const updatesKey = 'mindwave_updates';
+    const gamesKey = 'mindwave_games';
+
+    function loadData(key) {
+    try {
+    return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch (error) {
+    console.error('Failed to parse', key, error);
+    return [];
+    }
+    }
+
+    function renderAnnouncements() {
+    const container = document.getElementById('announcementFeed');
+    const announcements = loadData(announcementsKey).slice(-4).reverse();
+    if (announcements.length === 0) {
+    container.innerHTML = '<div class="empty-state">No announcements yet. Check back soon! 📨</div>';
+    return;
+    }
+    container.innerHTML = announcements.map(item => `
+    <article class="feed-item">
+        <h3>${item.title || 'Untitled Announcement'}</h3>
+        <small>${item.audience || 'All Students'} • ${item.date || ''}</small>
+        <p>${item.body || item.text || ''}</p>
+        <span class="tag green">Live</span>
+    </article>
+    `).join('');
+    }
+
+    function renderUpdates() {
+    const container = document.getElementById('updateFeed');
+    const updates = loadData(updatesKey).slice(-4).reverse();
+    if (updates.length === 0) {
+    container.innerHTML = '<div class="empty-state">Progress updates will appear here when your mentors post them. 📘
+    </div>';
+    return;
+    }
+    container.innerHTML = updates.map(item => `
+    <article class="feed-item">
+        <h3>${item.headline || 'Weekly Update'}</h3>
+        <small>${item.date || ''}</small>
+        <p>${item.summary || ''}</p>
+        <span class="tag blue">Update</span>
+    </article>
+    `).join('');
+    }
+
+    async function renderGames() {
+    const container = document.getElementById('gameFeed');
+    try {
+    const res = await fetch(`${API_BASE}/api/games/published`);
+    const data = await res.json();
+    const games = data.ok ? (data.games || []).slice(-6).reverse() : [];
+
+    if (games.length === 0) {
+    container.innerHTML = '<div class="empty-state">Faculty games drop in this space. Nothing has gone live yet. 🎮
+    </div>';
+    return;
+    }
+
+    container.innerHTML = games.map((item, index) => `
+    <article class="game-card" data-game-id="${item._id || item.id}"
+        data-game-title="${item.title || 'Untitled Challenge'}" data-game-type="${item.type || ''}">
+        <h3>${item.title || 'Untitled Challenge'}</h3>
+        <p>${item.type || ''} • ${item.difficulty || ''}</p>
+        <p style="margin-top: 12px;">${item.brief || ''}</p>
+        <span class="tag pink play-btn" style="margin-top: 12px; cursor: pointer;">Play</span>
+    </article>
+    `).join('');
+
+    // Add event delegation for play buttons
+    container.querySelectorAll('.game-card').forEach(card => {
+    const playBtn = card.querySelector('.play-btn');
+    playBtn.addEventListener('click', () => {
+    const gameId = card.dataset.gameId;
+    const gameTitle = card.dataset.gameTitle;
+    const gameType = card.dataset.gameType;
+    startGame(gameId, gameTitle, gameType);
+    });
+    });
+    } catch (error) {
+    console.error('Failed to fetch games:', error);
+    container.innerHTML = '<div class="empty-state">Failed to load games. Please refresh the page.</div>';
+    }
+    }
+
+    // Activity tracking system
+    const activityKey = 'student_activities';
+
+    function getStudentEmail() {
+    return localStorage.getItem('email') || 'guest@cmrit.ac.in';
+    }
+
+    function getStudentName() {
+    return localStorage.getItem('firstName') || 'Guest';
+    }
+
+    function startGame(gameId, gameTitle, gameType) {
+    const studentEmail = getStudentEmail();
+    const studentName = getStudentName();
+
+    // Record game start
+    const activity = {
+    id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+    gameId: gameId,
+    gameTitle: gameTitle,
+    gameType: gameType,
+    studentEmail: studentEmail,
+    studentName: studentName,
+    startedAt: new Date().toISOString(),
+    status: 'in-progress',
+    score: 0,
+    completedAt: null,
+    timeTaken: null
+    };
+
+    // Store activity
+    const activities = loadData(activityKey);
+    activities.push(activity);
+    localStorage.setItem(activityKey, JSON.stringify(activities));
+
+    // Simulate game completion (in real scenario, this would be in the actual game page)
+    // For demo purposes, we'll complete after 3-10 seconds with random score
+    const simulatedTime = Math.floor(Math.random() * 7000) + 3000;
+
+    setTimeout(() => {
+    completeGame(activity.id, Math.floor(Math.random() * 40) + 60, simulatedTime);
+    }, simulatedTime);
+
+    alert(`Starting ${gameTitle}! Complete the game to track your progress.`);
+    }
+
+    function completeGame(activityId, score, timeTaken) {
+    const activities = loadData(activityKey);
+    const activityIndex = activities.findIndex(a => a.id === activityId);
+
+    if (activityIndex !== -1) {
+    activities[activityIndex].status = 'completed';
+    activities[activityIndex].score = score;
+    activities[activityIndex].completedAt = new Date().toISOString();
+    activities[activityIndex].timeTaken = Math.floor(timeTaken / 1000); // in seconds
+    localStorage.setItem(activityKey, JSON.stringify(activities));
+    }
+    }
+
+    // Removed redirect to login to make homepage a separate accessible entity
+    // if (!localStorage.getItem('loggedIn')) {
+    // window.location.href = 'login.html';
+    // }
+
+    const profileToggle = document.getElementById('profileToggle');
+    const profileDropdown = document.getElementById('profileDropdown');
+    const signOutBtn = document.getElementById('signOutBtn');
+
+    // Update profile toggle with user's name
+    const firstName = localStorage.getItem('firstName') || 'User';
+    const smallElement = profileToggle.querySelector('small');
+    if (smallElement) {
+    smallElement.textContent = firstName;
+    }
+
+    if (profileToggle && profileDropdown) {
+    profileToggle.addEventListener('click', () => {
+    const isOpen = profileDropdown.style.display === 'flex';
+    profileDropdown.style.display = isOpen ? 'none' : 'flex';
+    });
+    document.addEventListener('click', (event) => {
+    if (!profileToggle.contains(event.target) && !profileDropdown.contains(event.target)) {
+    profileDropdown.style.display = 'none';
+    }
+    });
+    }
+
+    async function performLogout() {
+    try {
+    await fetch(`${API_BASE}/api/logout`, {
+    method: 'POST',
+    credentials: 'include'
+    });
+    } catch (error) {
+    console.error('Logout failed', error);
+    } finally {
+    localStorage.removeItem('mindwave_user');
+    localStorage.removeItem('mindwave_token');
+    document.cookie = 'mindwave_token=; Max-Age=0; path=/;';
+    window.location.href = 'login.html';
+    }
+    }
+
+    if (signOutBtn) {
+    signOutBtn.addEventListener('click', performLogout);
+    }
+
+    function getReadAnnouncements() {
+    try {
+    return JSON.parse(localStorage.getItem('readAnnouncements') || '[]');
+    } catch (error) {
+    return [];
+    }
+    }
+
+    function markAsRead(announcementId) {
+    const read = getReadAnnouncements();
+    if (!read.includes(announcementId)) {
+    read.push(announcementId);
+    localStorage.setItem('readAnnouncements', JSON.stringify(read));
+    }
+    }
+
+    function getUnreadCount() {
+    const announcements = loadData(announcementsKey);
+    const read = getReadAnnouncements();
+    return announcements.filter(ann => !read.includes(ann.id || ann.date + ann.title)).length;
+    }
+
+    function updateNotificationBadge() {
+    const badge = document.getElementById('notificationBadge');
+    const unreadCount = getUnreadCount();
+
+    if (unreadCount > 0) {
+    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    badge.classList.remove('hidden');
+    } else {
+    badge.classList.add('hidden');
+    }
+    }
+
+    async function fetchNotifications() {
+    try {
+    const res = await fetch(`${API_BASE}/api/notifications`);
+    const data = await res.json();
+    if (data.ok) {
+    const notifications = data.notifications;
+    const unreadCount = notifications.filter(n => !n.read).length; // Simplified read check
+
+    const badge = document.getElementById('notificationBadge');
+    if (unreadCount > 0) {
+    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    badge.classList.remove('hidden');
+    } else {
+    badge.classList.add('hidden');
+    }
+
+    const dropdown = document.getElementById('notificationDropdown');
+    if (notifications.length === 0) {
+    dropdown.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">No new notifications
+    </div>';
+    } else {
+    dropdown.innerHTML = notifications.map(n => `
+    <div class="notification-item ${n.read ? '' : 'unread'}">
+        <h4>${n.title}</h4>
+        <p>${n.message}</p>
+        <small>${new Date(n.createdAt).toLocaleTimeString()}</small>
+        ${n.link ? `<a href="${n.link}"
+            style="display:block; margin-top:4px; font-size:11px; color:var(--blue);">View</a>` : ''}
+    </div>
+    `).join('');
+    }
+    }
+    } catch (e) {
+    console.error("Failed to fetch notifications", e);
+    }
+    }
+
+    // Poll for notifications every 30 seconds
+    fetchNotifications();
+    setInterval(fetchNotifications, 30000);
+
+    function renderNotificationDropdown() {
+    // Already handled by fetchNotifications, just toggle visibility
+    }
+
+    // Bell click handler
+    const notificationBell = document.getElementById('notificationBell');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+
+    if (notificationBell && notificationDropdown) {
+    notificationBell.addEventListener('click', (e) => {
+    e.stopPropagation();
+    renderNotificationDropdown();
+    const isOpen = notificationDropdown.classList.contains('show');
+    if (isOpen) {
+    notificationDropdown.classList.remove('show');
+    } else {
+    notificationDropdown.classList.add('show');
+    }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+    if (!notificationBell.contains(e.target)) {
+    notificationDropdown.classList.remove('show');
+    }
+    });
+
+    // Handle announcement item clicks
+    notificationDropdown.addEventListener('click', (e) => {
+    const item = e.target.closest('.notification-item');
+    if (item) {
+    const annId = item.dataset.announcementId;
+    markAsRead(annId);
+    updateNotificationBadge();
+    window.location.href = `announcements.html?id=${encodeURIComponent(annId)}`;
+    }
+    });
+    }
+
+    // Update notification badge on page load
+    updateNotificationBadge();
+
+    // Update badge periodically (every 2 seconds) to catch new announcements
+    setInterval(() => {
+    updateNotificationBadge();
+    }, 2000);
+
+    renderAnnouncements();
+    renderUpdates();
+    renderGames();
+    </script>
+</body>
+
+</html>

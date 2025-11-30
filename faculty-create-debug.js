@@ -48,7 +48,7 @@ function generatePreview() {
     document.getElementById('previewContainer').style.display = 'block';
 }
 
-function publishGame() {
+async function publishGame() {
     const title = document.getElementById('gameTitle').value;
     const description = document.getElementById('gameDesc').value;
     const perfectCode = perfectCodeEditor.getValue();
@@ -62,7 +62,6 @@ function publishGame() {
     const result = injectBugs(perfectCode, bugCount);
 
     const game = {
-        id: Date.now().toString(36) + Math.random().toString(36).substr(2),
         type: 'bug-hunt',
         title: title,
         description: description,
@@ -75,14 +74,28 @@ function publishGame() {
         bugs: result.bugs,
         explanation: document.getElementById('explanation').value,
         totalPoints: parseInt(document.getElementById('totalPoints').value),
-        date: new Date().toISOString(),
-        creator: localStorage.getItem('email') || 'admin'
+        creator: localStorage.getItem('email') || 'admin',
+        published: true
     };
 
-    const games = JSON.parse(localStorage.getItem('games') || '[]');
-    games.push(game);
-    localStorage.setItem('games', JSON.stringify(games));
+    try {
+        const response = await fetch('/api/games', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(game)
+        });
 
-    alert('✅ Debug game published successfully!');
-    window.location.href = 'admin.html';
+        if (response.ok) {
+            alert('✅ Debug game published successfully!');
+            window.location.href = 'admin.html';
+        } else {
+            const error = await response.json();
+            alert('Failed to publish game: ' + (error.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error('Error publishing game:', err);
+        alert('Failed to publish game. Please check your connection.');
+    }
 }
