@@ -584,21 +584,41 @@
             `).join('');
         }
 
-        function renderGames() {
+        async function renderGames() {
             const container = document.getElementById('gameFeed');
-            const games = loadData(gamesKey).slice(-6).reverse();
-            if (games.length === 0) {
-                container.innerHTML = '<div class="empty-state">Faculty games drop in this space. Nothing has gone live yet. 🎮</div>';
-                return;
+            try {
+                const res = await fetch(`${API_BASE}/api/games/published`);
+                const data = await res.json();
+                const games = data.ok ? (data.games || []).slice(-6).reverse() : [];
+
+                if (games.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Faculty games drop in this space. Nothing has gone live yet. 🎮</div>';
+                    return;
+                }
+
+                container.innerHTML = games.map((item, index) => `
+                    <article class="game-card" data-game-id="${item._id || item.id}" data-game-title="${item.title || 'Untitled Challenge'}" data-game-type="${item.type || ''}">
+                        <h3>${item.title || 'Untitled Challenge'}</h3>
+                        <p>${item.type || ''} • ${item.difficulty || ''}</p>
+                        <p style="margin-top: 12px;">${item.brief || ''}</p>
+                        <span class="tag pink play-btn" style="margin-top: 12px; cursor: pointer;">Play</span>
+                    </article>
+                `).join('');
+
+                // Add event delegation for play buttons
+                container.querySelectorAll('.game-card').forEach(card => {
+                    const playBtn = card.querySelector('.play-btn');
+                    playBtn.addEventListener('click', () => {
+                        const gameId = card.dataset.gameId;
+                        const gameTitle = card.dataset.gameTitle;
+                        const gameType = card.dataset.gameType;
+                        startGame(gameId, gameTitle, gameType);
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to fetch games:', error);
+                container.innerHTML = '<div class="empty-state">Failed to load games. Please refresh the page.</div>';
             }
-            container.innerHTML = games.map((item, index) => `
-                <article class="game-card" data-game-id="${item.id || item.date + item.title}" data-game-title="${item.title || 'Untitled Challenge'}">
-                    <h3>${item.title || 'Untitled Challenge'}</h3>
-                    <p>${item.type || ''} • ${item.difficulty || ''}</p>
-                    <p style="margin-top: 12px;">${item.brief || ''}</p>
-                    <span class="tag pink" style="margin-top: 12px; cursor: pointer;" onclick="startGame('${item.id || item.date + item.title}', '${(item.title || 'Untitled Challenge').replace(/'/g, "\\'")}', '${item.type || ''}')">Play</span>
-                </article>
-            `).join('');
         }
 
         // Activity tracking system
