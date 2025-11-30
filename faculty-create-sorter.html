@@ -83,7 +83,7 @@
                     <h3>1. Define Categories</h3>
                     <div class="category-input">
                         <input type="text" id="newCatInput" placeholder="Category Name (e.g. Database)">
-                        <button type="button" class="secondary-btn" onclick="addCategory()">Add</button>
+                        <button type="button" class="secondary-btn" id="addCategoryBtn">Add</button>
                     </div>
                     <div class="category-list" id="categoryList">
                         <!-- Categories go here -->
@@ -95,13 +95,12 @@
                     <div id="itemsContainer">
                         <!-- Items go here -->
                     </div>
-                    <button type="button" class="ghost-btn" onclick="addItemRow()"
-                        style="width: 100%; margin-top: 12px;">+ Add Item</button>
+                    <button type="button" class="ghost-btn" id="addItemBtn" style="width: 100%; margin-top: 12px;">+ Add
+                        Item</button>
                 </section>
 
                 <div class="form-actions" style="margin-top: 32px;">
-                    <button type="button" class="secondary-btn"
-                        onclick="window.location.href='admin.html'">Cancel</button>
+                    <button type="button" class="secondary-btn" id="cancelBtn">Cancel</button>
                     <button type="submit" class="submit-btn">Publish Sorter</button>
                 </div>
             </form>

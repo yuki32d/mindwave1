@@ -33,7 +33,7 @@ function renderCategories() {
     container.innerHTML = categories.map(cat => `
         <div class="category-tag">
             ${cat}
-            <span class="remove-cat" onclick="removeCategory('${cat}')">×</span>
+            <span class="remove-cat" data-category="${cat}">×</span>
         </div>
     `).join('');
 }
@@ -48,7 +48,7 @@ function addItemRow() {
             <option value="" disabled selected>Select Category</option>
             ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
         </select>
-        <button type="button" class="remove-btn" onclick="this.parentElement.remove()" style="color: #ff375f; background: none; border: none; cursor: pointer;">Remove</button>
+        <button type="button" class="remove-item-btn" style="color: #ff375f; background: none; border: none; cursor: pointer;">Remove</button>
     `;
     container.appendChild(div);
 }
@@ -63,6 +63,27 @@ function renderItemRows() {
         `;
     });
 }
+
+// Event listeners
+document.getElementById('addCategoryBtn').addEventListener('click', addCategory);
+document.getElementById('addItemBtn').addEventListener('click', addItemRow);
+document.getElementById('cancelBtn').addEventListener('click', () => {
+    window.location.href = 'admin.html';
+});
+
+// Event delegation for dynamically created elements
+document.getElementById('categoryList').addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-cat')) {
+        const category = e.target.dataset.category;
+        removeCategory(category);
+    }
+});
+
+document.getElementById('itemsContainer').addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-item-btn')) {
+        e.target.parentElement.remove();
+    }
+});
 
 // Add initial item row
 addItemRow();
