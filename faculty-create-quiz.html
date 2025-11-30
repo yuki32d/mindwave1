@@ -150,185 +150,171 @@
                         <button type="button" class="secondary-btn"
                             onclick="window.location.href='admin.html'">Cancel</button>
                         <button type="submit" class="submit-btn">Publish Quiz</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+                        <!DOCTYPE html>
+                        <html lang="en">
 
-    <script>
-        // State
-        let questions = [];
-        const gamesKey = 'games';
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>MINDWAVE – Create Quiz</title>
+                            <link rel="stylesheet" href="role-page.css">
+                            <style>
+                                .builder-container {
+                                    max-width: 800px;
+                                    margin: 0 auto;
+                                }
 
-        function loadData(key) {
-            try { return JSON.parse(localStorage.getItem(key) || '[]'); }
-            catch { return []; }
-        }
+                                .question-card {
+                                    background: rgba(255, 255, 255, 0.03);
+                                    border: 1px solid rgba(255, 255, 255, 0.1);
+                                    border-radius: 16px;
+                                    padding: 24px;
+                                    margin-bottom: 24px;
+                                    position: relative;
+                                }
 
-        function saveData(key, data) {
-            localStorage.setItem(key, JSON.stringify(data));
-        }
+                                .question-card h3 {
+                                    margin: 0 0 16px;
+                                    font-size: 18px;
+                                    color: #9ea4b6;
+                                }
 
-        function createQuestionHTML(id, index) {
-            return `
-                <div class="question-card" id="q-${id}">
-                    <button type="button" class="remove-btn" onclick="removeQuestion('${id}')">Remove</button>
-                    <h3>Question ${index + 1}</h3>
-                    
-                    <div style="margin-bottom: 16px;">
-                        <input type="text" name="q-${id}-text" placeholder="Type your question here..." required 
-                            style="width: 100%; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
-                    </div>
+                                .remove-btn {
+                                    position: absolute;
+                                    top: 20px;
+                                    right: 20px;
+                                    background: none;
+                                    border: none;
+                                    color: #ff375f;
+                                    cursor: pointer;
+                                    font-size: 14px;
+                                }
 
-                    <label style="font-size: 12px; margin-bottom: 8px; display: block;">Answer Options (Select the correct one)</label>
-                    <div class="options-grid">
-                        <div class="option-input">
-                            <input type="radio" name="q-${id}-correct" value="0" required>
-                            <input type="text" name="q-${id}-opt-0" placeholder="Option A" required>
-                        </div>
-                        <div class="option-input">
-                            <input type="radio" name="q-${id}-correct" value="1">
-                            <input type="text" name="q-${id}-opt-1" placeholder="Option B" required>
-                        </div>
-                        <div class="option-input">
-                            <input type="radio" name="q-${id}-correct" value="2">
-                            <input type="text" name="q-${id}-opt-2" placeholder="Option C">
-                        </div>
-                        <div class="option-input">
-                            <input type="radio" name="q-${id}-correct" value="3">
-                            <input type="text" name="q-${id}-opt-3" placeholder="Option D">
-                        </div>
-                    </div>
+                                .options-grid {
+                                    display: grid;
+                                    grid-template-columns: 1fr 1fr;
+                                    gap: 16px;
+                                    margin-top: 16px;
+                                }
 
-                    <div style="margin-top: 16px; display: flex; align-items: center; gap: 12px;">
-                        <label style="margin: 0;">Points:</label>
-                        <input type="number" name="q-${id}-points" value="10" style="width: 80px;" onchange="updateTotalPoints()">
-                    </div>
-                </div>
-            `;
-        }
+                                .option-input {
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 8px;
+                                    background: rgba(0, 0, 0, 0.2);
+                                    padding: 8px 12px;
+                                    border-radius: 8px;
+                                    border: 1px solid rgba(255, 255, 255, 0.1);
+                                }
 
-        function addQuestion() {
-            const id = Date.now().toString();
-            questions.push({ id });
-            renderQuestions();
-        }
+                                .option-input input[type="radio"] {
+                                    width: auto;
+                                    margin: 0;
+                                }
 
-        window.removeQuestion = function (id) {
-            questions = questions.filter(q => q.id !== id);
-            renderQuestions();
-        };
+                                .option-input input[type="text"] {
+                                    border: none;
+                                    background: none;
+                                    padding: 0;
+                                }
 
-        function renderQuestions() {
-            const container = document.getElementById('questionsContainer');
-            // Save current values before re-rendering (simplified for prototype: just re-render logic)
-            // In a real app, we'd append/remove DOM nodes to preserve state. 
-            // For this version, let's append new ones only or rebuild carefully.
+                                .add-btn {
+                                    width: 100%;
+                                    padding: 16px;
+                                    border: 2px dashed rgba(255, 255, 255, 0.1);
+                                    background: none;
+                                    color: #9ea4b6;
+                                    border-radius: 16px;
+                                    cursor: pointer;
+                                    transition: all 0.2s;
+                                }
 
-            // Re-building approach for simplicity, but we lose focus. 
-            // Better: Just append the new one.
+                                .add-btn:hover {
+                                    border-color: var(--blue);
+                                    color: var(--blue);
+                                    background: rgba(15, 98, 254, 0.05);
+                                }
 
-            // Let's rely on the array for order, but only append new ones if possible.
-            // Actually, simplest robust way for this demo:
-            // We won't re-render ALL. We will just append the new one.
-            // But for 'remove', we need to remove the element.
+                                .sticky-footer {
+                                    position: sticky;
+                                    bottom: 24px;
+                                    background: rgba(11, 13, 21, 0.9);
+                                    backdrop-filter: blur(10px);
+                                    padding: 16px 24px;
+                                    border-radius: 16px;
+                                    border: 1px solid rgba(255, 255, 255, 0.1);
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    margin-top: 40px;
+                                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+                                    z-index: 100;
+                                }
+                            </style>
+                        </head>
 
-            // Let's change strategy: 'questions' array tracks IDs.
-            // We manipulate DOM directly.
-        }
+                        <body>
+                            <div class="page-shell">
+                                <header class="hero">
+                                    <a class="ghost-link" href="admin.html" style="margin-bottom: 24px;">← Back to
+                                        Dashboard</a>
+                                    <p class="eyebrow">Game Builder</p>
+                                    <h1>Create New Quiz</h1>
+                                    <p class="lede">Build engaging multiple-choice assessments. Questions are saved
+                                        automatically as you type.
+                                    </p>
+                                </header>
 
-        // Better Implementation: Direct DOM manipulation
-        const container = document.getElementById('questionsContainer');
-        const addBtn = document.getElementById('addQuestionBtn');
-        const countSpan = document.getElementById('questionCount');
-        const pointsSpan = document.getElementById('totalPoints');
+                                <div class="builder-container">
+                                    <form id="quizForm">
+                                        <!-- Quiz Metadata -->
+                                        <section class="panel-card" style="margin-bottom: 32px;">
+                                            <div class="grid two">
+                                                <div>
+                                                    <label for="quizTitle">Quiz Title</label>
+                                                    <input type="text" id="quizTitle" name="title"
+                                                        placeholder="e.g. Week 4 Review: React Basics" required
+                                                        style="font-size: 18px; font-weight: 600;">
+                                                </div>
+                                                <div>
+                                                    <label for="quizDuration">Time Limit (Minutes)</label>
+                                                    <input type="number" id="quizDuration" name="duration"
+                                                        placeholder="15" value="10">
+                                                </div>
+                                            </div>
+                                            <div style="margin-top: 16px;">
+                                                <label for="quizDescription">Description</label>
+                                                <textarea id="quizDescription" name="description"
+                                                    placeholder="Briefly describe what this quiz covers..."
+                                                    rows="2"></textarea>
+                                            </div>
+                                        </section>
 
-        addBtn.addEventListener('click', () => {
-            const id = Date.now().toString();
-            const index = container.children.length;
-            const div = document.createElement('div');
-            div.innerHTML = createQuestionHTML(id, index);
-            container.appendChild(div);
-            updateStats();
-        });
+                                        <!-- Questions Container -->
+                                        <div id="questionsContainer">
+                                            <!-- Questions will be injected here -->
+                                        </div>
 
-        window.removeQuestion = function (id) {
-            const card = document.getElementById(`q-${id}`);
-            if (card) {
-                card.remove();
-                // Renumber questions
-                Array.from(container.children).forEach((child, idx) => {
-                    child.querySelector('h3').textContent = `Question ${idx + 1}`;
-                });
-                updateStats();
-            }
-        };
+                                        <button type="button" class="add-btn" id="addQuestionBtn">+ Add
+                                            Question</button>
 
-        window.updateTotalPoints = function () {
-            updateStats();
-        }
+                                        <!-- Sticky Footer Actions -->
+                                        <div class="sticky-footer">
+                                            <span style="color: #9ea4b6; font-size: 14px;">
+                                                <span id="questionCount">0</span> questions • Total Points: <span
+                                                    id="totalPoints">0</span>
+                                            </span>
+                                            <div class="form-actions">
+                                                <button type="button" class="secondary-btn"
+                                                    onclick="window.location.href='admin.html'">Cancel</button>
+                                                <button type="submit" class="submit-btn">Publish Quiz</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
 
-        function updateStats() {
-            countSpan.textContent = container.children.length;
-            let total = 0;
-            container.querySelectorAll('input[name$="-points"]').forEach(input => {
-                total += parseInt(input.value) || 0;
-            });
-            pointsSpan.textContent = total;
-        }
+                            <script src="faculty-create-quiz.js"></script>
+                        </body>
 
-        // Form Submission
-        document.getElementById('quizForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-
-            // Parse Questions
-            const questionNodes = container.querySelectorAll('.question-card');
-            const parsedQuestions = Array.from(questionNodes).map(node => {
-                const id = node.id.replace('q-', '');
-                return {
-                    text: formData.get(`q-${id}-text`),
-                    options: [
-                        formData.get(`q-${id}-opt-0`),
-                        formData.get(`q-${id}-opt-1`),
-                        formData.get(`q-${id}-opt-2`),
-                        formData.get(`q-${id}-opt-3`)
-                    ].filter(Boolean), // Remove empty options
-                    correctIndex: parseInt(formData.get(`q-${id}-correct`)),
-                    points: parseInt(formData.get(`q-${id}-points`))
-                };
-            });
-
-            if (parsedQuestions.length === 0) {
-                alert('Please add at least one question.');
-                return;
-            }
-
-            const quizData = {
-                id: Date.now().toString(),
-                type: 'quiz',
-                title: formData.get('title'),
-                description: formData.get('description'),
-                duration: parseInt(formData.get('duration')),
-                questions: parsedQuestions,
-                totalPoints: parseInt(pointsSpan.textContent),
-                createdAt: new Date().toISOString(),
-                status: 'active'
-            };
-
-            const games = loadData(gamesKey);
-            games.push(quizData);
-            saveData(gamesKey, games);
-
-            alert('Quiz published successfully!');
-            window.location.href = 'admin.html';
-        });
-
-        // Add first question by default
-        addBtn.click();
-
-    </script>
-</body>
-
-</html>
+                        </html>

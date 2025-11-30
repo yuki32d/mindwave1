@@ -215,101 +215,211 @@
 
         <div class="action-buttons">
             <button class="secondary-btn" onclick="window.location.href='admin.html'">Cancel</button>
-            <button class="primary-btn" onclick="publishGame()">Publish Game</button>
-        </div>
-    </div>
-
-    <script src="bug-injection.js"></script>
-    <script>
-        let perfectCodeEditor;
-        let buggyCodeEditor;
-
-        // Initialize CodeMirror
-        window.addEventListener('DOMContentLoaded', () => {
-            perfectCodeEditor = CodeMirror.fromTextArea(document.getElementById('perfectCode'), {
-                mode: 'javascript',
-                theme: 'dracula',
-                lineNumbers: true,
-                indentUnit: 4,
-                tabSize: 4
-            });
-
-            buggyCodeEditor = CodeMirror.fromTextArea(document.getElementById('buggyCodePreview'), {
-                mode: 'javascript',
-                theme: 'dracula',
-                lineNumbers: true,
-                readOnly: true
-            });
-
-            // Update mode when language changes
-            document.getElementById('language').addEventListener('change', (e) => {
-                const mode = e.target.value === 'python' ? 'python' :
-                    e.target.value === 'java' ? 'text/x-java' :
-                        e.target.value === 'cpp' ? 'text/x-c++src' : 'javascript';
-                perfectCodeEditor.setOption('mode', mode);
-                buggyCodeEditor.setOption('mode', mode);
-            });
-        });
-
-        function generatePreview() {
-            const code = perfectCodeEditor.getValue();
-            if (!code.trim()) {
-                alert('Please enter some code first!');
-                return;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
             }
 
-            const bugCount = parseInt(document.getElementById('bugCount').value);
-            const result = injectBugs(code, bugCount);
-
-            buggyCodeEditor.setValue(result.buggyCode);
-
-            const bugList = document.getElementById('bugList');
-            bugList.innerHTML = result.bugs.map(bug =>
-                `<span class="bug-badge">${bug.type}: Line ${bug.line}</span>`
-            ).join('');
-
-            document.getElementById('previewContainer').style.display = 'block';
-        }
-
-        function publishGame() {
-            const title = document.getElementById('gameTitle').value;
-            const description = document.getElementById('gameDesc').value;
-            const perfectCode = perfectCodeEditor.getValue();
-
-            if (!title || !description || !perfectCode.trim()) {
-                alert('Please fill in all required fields!');
-                return;
+            .form-section h3 {
+            margin: 0 0 16px;
+            font-size: 18px;
             }
 
-            const bugCount = parseInt(document.getElementById('bugCount').value);
-            const result = injectBugs(perfectCode, bugCount);
+            .form-group {
+            margin-bottom: 20px;
+            }
 
-            const game = {
-                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-                type: 'bug-hunt',
-                title: title,
-                description: description,
-                difficulty: document.getElementById('difficulty').value,
-                duration: parseInt(document.getElementById('duration').value),
-                language: document.getElementById('language').value,
-                perfectCode: perfectCode,
-                buggyCode: result.buggyCode,
-                bugCount: bugCount,
-                bugs: result.bugs,
-                explanation: document.getElementById('explanation').value,
-                totalPoints: parseInt(document.getElementById('totalPoints').value),
-                date: new Date().toISOString(),
-                creator: localStorage.getItem('email') || 'admin'
-            };
+            .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #9ea4b6;
+            }
 
-            const games = JSON.parse(localStorage.getItem('games') || '[]');
-            games.push(game);
-            localStorage.setItem('games', JSON.stringify(games));
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            }
 
-            alert('✅ Debug game published successfully!');
-            window.location.href = 'admin.html';
-        }
-    </script>
-</body>
+            .CodeMirror {
+            height: 400px;
+            border-radius: 12px;
+            font-size: 14px;
+            }
+
+            .preview-section {
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 16px;
+            }
+
+            .preview-section h4 {
+            margin: 0 0 12px;
+            color: #ff3b30;
+            }
+
+            .bug-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(255, 59, 48, 0.2);
+            border-radius: 999px;
+            font-size: 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            }
+
+            .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            }
+
+            .primary-btn {
+            flex: 1;
+            padding: 14px 28px;
+            background: #0f62fe;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            }
+
+            .primary-btn:hover {
+            background: #0353e9;
+            transform: translateY(-2px);
+            }
+
+            .secondary-btn {
+            flex: 1;
+            padding: 14px 28px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            }
+
+            .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            }
+            </style>
+            </head>
+
+            <body>
+                <div class="page-shell">
+                    <header class="hero">
+                        <a class="ghost-link" href="admin.html">← Back to Admin</a>
+                        <p class="eyebrow">Game Builder</p>
+                        <h1>🐛 Debug the Monolith</h1>
+                        <p class="lede">Enter perfect code and let the system inject bugs automatically</p>
+                    </header>
+
+                    <div class="form-section">
+                        <h3>Game Details</h3>
+                        <div class="form-group">
+                            <label>Game Title</label>
+                            <input type="text" id="gameTitle" placeholder="e.g., Fix the Login Function">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="gameDesc" rows="3"
+                                placeholder="Describe what the code should do..."></textarea>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label>Difficulty</label>
+                                <select id="difficulty">
+                                    <option value="Beginner">Beginner</option>
+                                    <option value="Intermediate">Intermediate</option>
+                                    <option value="Advanced">Advanced</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Time Limit (minutes)</label>
+                                <input type="number" id="duration" value="15" min="5" max="60">
+                            </div>
+                            <div class="form-group">
+                                <label>Programming Language</label>
+                                <select id="language">
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="python">Python</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Perfect Code (Working Version)</h3>
+                        <p style="color: #9ea4b6; margin-bottom: 16px;">Enter the correct, bug-free code. The system
+                            will
+                            automatically inject bugs for students to fix.</p>
+                        <textarea id="perfectCode"></textarea>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Bug Configuration</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label>Number of Bugs to Inject</label>
+                                <select id="bugCount">
+                                    <option value="1">1 Bug (Easy)</option>
+                                    <option value="2">2 Bugs (Medium)</option>
+                                    <option value="3" selected>3 Bugs (Hard)</option>
+                                    <option value="4">4 Bugs (Very Hard)</option>
+                                    <option value="5">5 Bugs (Expert)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Points</label>
+                                <input type="number" id="totalPoints" value="100" min="10" max="500" step="10">
+                            </div>
+                        </div>
+                        <button class="secondary-btn" onclick="generatePreview()"
+                            style="width: 100%; margin-top: 12px;">🔍 Preview
+                            Buggy Code</button>
+
+                        <div id="previewContainer" style="display: none;" class="preview-section">
+                            <h4>Preview: Buggy Code (What Students Will See)</h4>
+                            <div id="bugList" style="margin-bottom: 12px;"></div>
+                            <textarea id="buggyCodePreview" readonly></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Explanation for Students</h3>
+                        <p style="color: #9ea4b6; margin-bottom: 16px;">This will be shown to students after they submit
+                            their fix.
+                        </p>
+                        <textarea id="explanation" rows="4"
+                            placeholder="Explain what the bugs were and how to fix them..."></textarea>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="secondary-btn" onclick="window.location.href='admin.html'">Cancel</button>
+                        <button class="primary-btn" onclick="publishGame()">Publish Game</button>
+                    </div>
+                </div>
+
+                <script src="bug-injection.js"></script>
+                <script src="faculty-create-debug.js"></script>
+            </body>
 
 </html>

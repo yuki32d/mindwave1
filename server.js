@@ -248,7 +248,15 @@ app.use(
     credentials: true
   })
 );
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "script-src": ["'self'", "https://cdnjs.cloudflare.com"],
+      "style-src": ["'self'", "https://cdnjs.cloudflare.com", "'unsafe-inline'"]
+    }
+  }
+}));
 app.use(express.json());
 app.use(cookieParser());
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
