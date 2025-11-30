@@ -102,121 +102,13 @@
                 <div class="form-actions" style="margin-top: 32px;">
                     <button type="button" class="secondary-btn"
                         onclick="window.location.href='admin.html'">Cancel</button>
-                    <!DOCTYPE html>
-                    <html lang="en">
+                    <button type="submit" class="submit-btn">Publish Sorter</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>MINDWAVE – Create Tech Sorter</title>
-                        <link rel="stylesheet" href="role-page.css">
-                        <style>
-                            .builder-container {
-                                max-width: 800px;
-                                margin: 0 auto;
-                            }
+    <script src="faculty-create-sorter.js"></script>
+</body>
 
-                            .category-input {
-                                display: flex;
-                                gap: 12px;
-                                margin-bottom: 12px;
-                            }
-
-                            .category-list {
-                                display: flex;
-                                flex-wrap: wrap;
-                                gap: 12px;
-                                margin-bottom: 24px;
-                            }
-
-                            .category-tag {
-                                background: rgba(15, 98, 254, 0.2);
-                                color: #4da0ff;
-                                padding: 6px 12px;
-                                border-radius: 6px;
-                                font-size: 14px;
-                                display: flex;
-                                align-items: center;
-                                gap: 8px;
-                            }
-
-                            .remove-cat {
-                                cursor: pointer;
-                                opacity: 0.7;
-                            }
-
-                            .item-input-row {
-                                display: grid;
-                                grid-template-columns: 2fr 1fr auto;
-                                gap: 12px;
-                                align-items: center;
-                                background: rgba(255, 255, 255, 0.03);
-                                padding: 12px;
-                                border-radius: 8px;
-                                margin-bottom: 8px;
-                            }
-                        </style>
-                    </head>
-
-                    <body>
-                        <div class="page-shell">
-                            <header class="hero">
-                                <a class="ghost-link" href="admin.html">← Back to Dashboard</a>
-                                <p class="eyebrow">Game Builder</p>
-                                <h1>Tech Stack Sorter</h1>
-                                <p class="lede">Create categories and items. Students must drag each item into the
-                                    correct category.</p>
-                            </header>
-
-                            <div class="builder-container">
-                                <form id="sorterForm">
-                                    <section class="panel-card" style="margin-bottom: 32px;">
-                                        <div class="grid two">
-                                            <div>
-                                                <label for="gameTitle">Title</label>
-                                                <input type="text" id="gameTitle" name="title"
-                                                    placeholder="e.g. Frontend vs Backend" required>
-                                            </div>
-                                            <div>
-                                                <label for="gameDuration">Time Limit (Minutes)</label>
-                                                <input type="number" id="gameDuration" name="duration" placeholder="5"
-                                                    value="5">
-                                            </div>
-                                        </div>
-                                    </section>
-
-                                    <section class="panel-card" style="margin-bottom: 32px;">
-                                        <h3>1. Define Categories</h3>
-                                        <div class="category-input">
-                                            <input type="text" id="newCatInput"
-                                                placeholder="Category Name (e.g. Database)">
-                                            <button type="button" class="secondary-btn"
-                                                onclick="addCategory()">Add</button>
-                                        </div>
-                                        <div class="category-list" id="categoryList">
-                                            <!-- Categories go here -->
-                                        </div>
-                                    </section>
-
-                                    <section class="panel-card">
-                                        <h3>2. Add Items to Sort</h3>
-                                        <div id="itemsContainer">
-                                            <!-- Items go here -->
-                                        </div>
-                                        <button type="button" class="ghost-btn" onclick="addItemRow()"
-                                            style="width: 100%; margin-top: 12px;">+ Add Item</button>
-                                    </section>
-
-                                    <div class="form-actions" style="margin-top: 32px;">
-                                        <button type="button" class="secondary-btn"
-                                            onclick="window.location.href='admin.html'">Cancel</button>
-                                        <button type="submit" class="submit-btn">Publish Sorter</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <script src="faculty-create-sorter.js"></script>
-                    </body>
-
-                    </html>
+</html>
