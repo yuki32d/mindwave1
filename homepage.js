@@ -12,38 +12,65 @@ function loadData(key) {
     }
 }
 
-function renderAnnouncements() {
+async function renderAnnouncements() {
     const container = document.getElementById('announcementFeed');
-    const announcements = loadData(announcementsKey).slice(-4).reverse();
-    if (announcements.length === 0) {
-        container.innerHTML = '<div class="empty-state">No announcements yet. Check back soon! 📨</div>';
-        return;
+    try {
+        const res = await fetch(`${API_BASE}/api/announcements`);
+        const data = await res.json();
+
+        const announcements = data.ok ? (data.announcements || []) : [];
+
+        if (announcements.length === 0) {
+            container.innerHTML = '<div class="empty-state">No announcements yet. Check back soon! 📨</div>';
+            return;
+        }
+
+        container.innerHTML = announcements.map(item => {
+            // Safety check: ensure content is not a full HTML page
+            const body = item.body || item.text || '';
+            if (body.includes('<html') || body.includes('<!DOCTYPE')) {
+                return ''; // Skip corrupted items
+            }
+            return `
+            <article class="feed-item">
+                <h3>${item.title || 'Untitled Announcement'}</h3>
+                <small>${item.audience || 'All Students'} • ${new Date(item.createdAt || Date.now()).toLocaleDateString()}</small>
+                <p>${body}</p>
+                <span class="tag green">Live</span>
+            </article>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Failed to fetch announcements:', error);
+        container.innerHTML = '<div class="empty-state">Failed to load announcements.</div>';
     }
-    container.innerHTML = announcements.map(item => `
-        <article class="feed-item">
-            <h3>${item.title || 'Untitled Announcement'}</h3>
-            <small>${item.audience || 'All Students'} • ${item.date || ''}</small>
-            <p>${item.body || item.text || ''}</p>
-            <span class="tag green">Live</span>
-        </article>
-    `).join('');
 }
 
 function renderUpdates() {
     const container = document.getElementById('updateFeed');
+    // Updates are still local for now, but we must validate them
     const updates = loadData(updatesKey).slice(-4).reverse();
+
     if (updates.length === 0) {
         container.innerHTML = '<div class="empty-state">Progress updates will appear here when your mentors post them. 📘</div>';
         return;
     }
-    container.innerHTML = updates.map(item => `
+
+    container.innerHTML = updates.map(item => {
+        // Safety check: ensure content is not a full HTML page
+        const summary = item.summary || '';
+        if (summary.includes('<html') || summary.includes('<!DOCTYPE')) {
+            return ''; // Skip corrupted items
+        }
+        return `
         <article class="feed-item">
             <h3>${item.headline || 'Weekly Update'}</h3>
             <small>${item.date || ''}</small>
-            <p>${item.summary || ''}</p>
+            <p>${summary}</p>
             <span class="tag blue">Update</span>
         </article>
-    `).join('');
+    `;
+    }).join('');
 }
 
 async function renderGames() {
