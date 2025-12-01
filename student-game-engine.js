@@ -261,6 +261,7 @@ function playQuiz(game, container) {
     let currentQuestionIndex = 0;
     let score = 0;
     let startTime = Date.now();
+    let selectedOptionIndex = null;
     const questions = game.questions || [];
 
     function render() {
@@ -272,26 +273,67 @@ function playQuiz(game, container) {
         const progress = ((currentQuestionIndex) / questions.length) * 100;
 
         container.innerHTML = `
-            <div class="player-header"><span>Question ${currentQuestionIndex + 1} of ${questions.length}</span><span class="timer">⏱️</span></div>
+            <div class="player-header">
+                <span>Question ${currentQuestionIndex + 1} of ${questions.length}</span>
+                <span class="timer">⏱️</span>
+            </div>
             <div class="question-display">
                 <h2 style="font-size: 24px; margin-bottom: 32px;">${q.text}</h2>
                 <div class="options-grid">
-                    ${q.options.map((opt, idx) => `<button class="option-btn" onclick="handleAnswer(${idx})">${opt}</button>`).join('')}
+                    ${q.options.map((opt, idx) => `
+                        <button class="option-btn ${selectedOptionIndex === idx ? 'selected' : ''}" data-idx="${idx}">
+                            ${opt}
+                        </button>
+                    `).join('')}
+                </div>
+                <div style="margin-top: 32px; display: flex; gap: 16px;">
+                    <button id="quitBtn" class="secondary-btn" style="background: rgba(255, 59, 48, 0.1); color: #ff3b30; border: 1px solid rgba(255, 59, 48, 0.2); padding: 12px 24px; border-radius: 8px; cursor: pointer;">Quit</button>
+                    <button id="submitBtn" class="submit-btn" style="flex: 1; opacity: ${selectedOptionIndex === null ? '0.5' : '1'}; cursor: ${selectedOptionIndex === null ? 'not-allowed' : 'pointer'};" ${selectedOptionIndex === null ? 'disabled' : ''}>Submit Answer</button>
                 </div>
                 <div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div>
             </div>
         `;
+
+        // Attach listeners
+        container.querySelectorAll('.option-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedOptionIndex = parseInt(btn.dataset.idx);
+                render(); // Re-render to update selection UI
+            });
+        });
+
+        // Submit button listener
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', () => {
+                if (selectedOptionIndex === null) return;
+
+                // Check if answer is correct and add points
+                if (selectedOptionIndex === q.correctIndex) {
+                    score += (q.points || 10);
+                }
+
+                // Move to next question
+                selectedOptionIndex = null;
+                currentQuestionIndex++;
+                render();
+            });
+        }
+
+        // Quit button listener
+        const quitBtn = document.getElementById('quitBtn');
+        if (quitBtn) {
+            quitBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to quit? Your progress will be lost.')) {
+                    window.location.href = 'student-game.html';
+                }
+            });
+        }
     }
 
-    window.handleAnswer = (selectedIndex) => {
-        const q = questions[currentQuestionIndex];
-        if (selectedIndex === q.correct) score += 10;
-        currentQuestionIndex++;
-        render();
-    };
-
     function finish() {
-        const totalPoints = questions.length * 10;
+        // Calculate total possible points
+        const totalPoints = questions.reduce((sum, q) => sum + (q.points || 10), 0);
         saveResult(game, score, totalPoints, startTime);
         showResult(container, score, totalPoints, startTime);
     }
@@ -650,9 +692,16 @@ function showResult(container, score, totalPoints, startTime) {
             <h2 style="font-size: 32px; margin-bottom: 24px;">${percentage >= 70 ? '🎉 Great Job!' : '💪 Keep Practicing'}</h2>
             <p style="font-size: 48px; font-weight: 700; background: linear-gradient(135deg, #4da0ff 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 24px 0;">${score}/${totalPoints}</p>
             <p style="color: #9ea4b6; margin-bottom: 32px;">Completed in ${Math.floor(timeTaken / 60)}m ${timeTaken % 60}s</p>
-            <button class="primary-btn" onclick="window.location.href='student-game.html'" style="width: 100%;">Back to Games</button>
+            <button id="backToGamesBtn" class="primary-btn" style="width: 100%;">Back to Games</button>
         </div>
     `;
+
+    const backBtn = document.getElementById('backToGamesBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            window.location.href = 'student-game.html';
+        });
+    }
 
     if (percentage >= 70) {
         fireConfetti();
@@ -675,12 +724,13 @@ function startTimer(durationMinutes, containerSelector, onFinish) {
 
     setTimeout(() => updateDisplay(timer), 0);
 
-    timerInterval = setInterval(() => {
+    if (window.timerInterval) clearInterval(window.timerInterval);
+    window.timerInterval = setInterval(() => {
         timer--;
         updateDisplay(timer);
 
         if (timer < 0) {
-            clearInterval(timerInterval);
+            clearInterval(window.timerInterval);
             onFinish();
         }
     }, 1000);
