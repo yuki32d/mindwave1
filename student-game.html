@@ -185,14 +185,206 @@
             <button class="filter-btn" data-filter="syntax-fill">Syntax Fill</button>
         </div>
 
-        <!-- Game Grid Container -->
-        <div id="appContainer" class="game-grid">
-            <!-- Games will be injected here -->
-        </div>
-    </div>
+        <!DOCTYPE html>
+        <html lang="en">
 
-    <script src="bug-injection.js"></script>
-    <script src="student-game-engine.js"></script>
-</body>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>MINDWAVE – Game Center</title>
+            <link rel="stylesheet" href="role-page.css">
+            <link rel="stylesheet" href="theme.css">
+            <script src="theme-init.js"></script>
 
-</html>
+            <!-- CodeMirror for Debug Game -->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+            <link rel="stylesheet"
+                href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+            <script
+                src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+
+            <style>
+                .game-container {
+                    max-width: 800px;
+                    margin: 0 auto;
+                }
+
+                .game-card {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 16px;
+                    padding: 24px;
+                    margin-bottom: 16px;
+                    transition: all 0.2s;
+                    cursor: pointer;
+                }
+
+                .game-card:hover {
+                    background: rgba(255, 255, 255, 0.08);
+                    transform: translateY(-2px);
+                }
+
+                .game-card h3 {
+                    margin: 0 0 8px;
+                    font-size: 18px;
+                }
+
+                .game-card p {
+                    margin: 0 0 16px;
+                    color: #9ea4b6;
+                    font-size: 14px;
+                }
+
+                .meta-tag {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 4px 10px;
+                    border-radius: 999px;
+                    background: rgba(15, 98, 254, 0.15);
+                    color: #4da0ff;
+                    font-size: 12px;
+                }
+
+                /* Game Player Styles */
+                .player-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 32px;
+                    padding-bottom: 16px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                }
+
+                .timer {
+                    font-family: monospace;
+                    font-size: 24px;
+                    color: #ff9f0a;
+                }
+
+                .question-display {
+                    background: rgba(15, 17, 27, 0.6);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 24px;
+                    padding: 32px;
+                }
+
+                .options-grid {
+                    display: grid;
+                    gap: 12px;
+                }
+
+                .option-btn {
+                    display: block;
+                    width: 100%;
+                    text-align: left;
+                    padding: 16px 20px;
+                    margin-bottom: 12px;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 12px;
+                }
+
+                .submit-btn,
+                .primary-btn {
+                    background: #0f62fe;
+                    color: white;
+                    border: none;
+                    padding: 14px 28px;
+                    border-radius: 12px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .submit-btn:hover,
+                .primary-btn:hover {
+                    background: #0353e9;
+                    transform: translateY(-2px);
+                }
+
+                .error-message {
+                    color: #ff3b30;
+                    background: rgba(255, 59, 48, 0.1);
+                    padding: 16px;
+                    border-radius: 8px;
+                    margin-top: 16px;
+                    border: 1px solid rgba(255, 59, 48, 0.2);
+                }
+
+                .CodeMirror {
+                    height: 300px;
+                    border-radius: 12px;
+                    margin-bottom: 16px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <div class="page-shell">
+                <header class="hero">
+                    <a class="ghost-link" href="homepage.html" id="backLink">← Back to Dashboard</a>
+                    <p class="eyebrow">Active Assignments</p>
+                    <h1 id="pageTitle">Game Center</h1>
+                    <p class="lede" id="pageDesc">Complete your assigned quizzes and challenges to earn points.</p>
+                </header>
+
+                <!-- Gamification Dashboard -->
+                <div class="gamification-dash"
+                    style="margin-bottom: 32px; background: linear-gradient(90deg, #1c1f26 0%, #111319 100%); border-radius: 20px; padding: 24px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-wrap: wrap; gap: 24px; align-items: center;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <strong style="font-size: 18px;">Level <span id="playerLevel">1</span></strong>
+                            <span style="color: #34c759;" id="playerRank">Novice</span>
+                        </div>
+                        <div
+                            style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden;">
+                            <div id="xpBar"
+                                style="width: 0%; height: 100%; background: #34c759; transition: width 0.5s ease;">
+                            </div>
+                        </div>
+                        <div
+                            style="margin-top: 6px; font-size: 12px; color: #9ea4b6; display: flex; justify-content: space-between;">
+                            <span id="currentXP">0 XP</span>
+                            <span id="nextLevelXP">100 XP</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 24px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px;">🔥 <span id="streakCount">0</span></div>
+                            <div style="font-size: 12px; color: #9ea4b6; margin-top: 4px;">Day Streak</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px;">🏆 <span id="totalWins">0</span></div>
+                            <div style="font-size: 12px; color: #9ea4b6; margin-top: 4px;">Wins</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-bar"
+                    style="margin-bottom: 24px; display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px;">
+                    <button class="filter-btn active" data-filter="all">All Games</button>
+                    <button class="filter-btn" data-filter="quiz">Quizzes</button>
+                    <button class="filter-btn" data-filter="bug-hunt">Bug Hunts</button>
+                    <button class="filter-btn" data-filter="tech-sorter">Tech Sorters</button>
+                    <button class="filter-btn" data-filter="syntax-fill">Syntax Fill</button>
+                </div>
+
+                <!-- Game Grid Container -->
+                <div id="appContainer" class="game-grid">
+                    <!-- Games will be injected here -->
+                </div>
+            </div>
+
+            <script src="bug-injection.js"></script>
+            <script src="student-game-engine.js"></script>
+            <script src="chatbot.js"></script>
+        </body>
+
+        </html>

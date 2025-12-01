@@ -14,6 +14,7 @@ import { fileURLToPath } from "url";
 import { google } from "googleapis";
 import fs from "fs";
 import multer from "multer";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
@@ -1231,6 +1232,41 @@ app.post("/api/classroom/upload", authMiddleware, upload.single('file'), async (
   } catch (error) {
     console.error("Upload Error:", error);
     res.status(500).json({ ok: false, message: "Upload failed" });
+  }
+});
+
+// Chatbot Endpoint
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { message, history } = req.body;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
+    if (!apiKey) {
+      console.error("Gemini API Key missing");
+      return res.status(500).json({ ok: false, reply: "I'm not fully configured yet (Missing API Key)." });
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: "You are Mindwave AI, a helpful assistant for students on the Mindwave learning platform. You help with coding, quizzes, and general questions. Be concise, encouraging, and use emojis. If asked about the platform, you are part of Mindwave, a gamified learning system."
+    });
+
+    const chat = model.startChat({
+      history: history || [],
+      generationConfig: {
+        maxOutputTokens: 1000,
+      },
+    });
+
+    const result = await chat.sendMessage(message);
+    const response = await result.response;
+    const text = response.text();
+
+    res.json({ ok: true, reply: text });
+  } catch (error) {
+    console.error("Chat Error:", error);
+    res.status(500).json({ ok: false, reply: "I'm having trouble connecting to my brain right now. 🧠💥" });
   }
 });
 
