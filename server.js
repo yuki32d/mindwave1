@@ -1174,6 +1174,61 @@ app.get("/api/classroom/courses", authMiddleware, async (req, res) => {
   }
 });
 
+// Get coursework (assignments) for a specific course
+app.get("/api/classroom/coursework/:courseId", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.sub);
+    const auth = await getGoogleClient(user);
+
+    if (!auth) {
+      return res.json({ ok: true, connected: false, coursework: [] });
+    }
+
+    const classroom = google.classroom({ version: "v1", auth });
+    const response = await classroom.courses.courseWork.list({
+      courseId: req.params.courseId,
+      pageSize: 20,
+      orderBy: "dueDate desc"
+    });
+
+    const coursework = response.data.courseWork || [];
+    res.json({ ok: true, connected: true, coursework });
+  } catch (error) {
+    console.error("Coursework API Error:", error);
+    if (error.code === 401) {
+      return res.json({ ok: true, connected: false, coursework: [], error: "Token expired" });
+    }
+    res.status(500).json({ ok: false, message: "Failed to fetch coursework" });
+  }
+});
+
+// Get materials for a specific course
+app.get("/api/classroom/materials/:courseId", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.sub);
+    const auth = await getGoogleClient(user);
+
+    if (!auth) {
+      return res.json({ ok: true, connected: false, materials: [] });
+    }
+
+    const classroom = google.classroom({ version: "v1", auth });
+    const response = await classroom.courses.courseWorkMaterials.list({
+      courseId: req.params.courseId,
+      pageSize: 20
+    });
+
+    const materials = response.data.courseWorkMaterial || [];
+    res.json({ ok: true, connected: true, materials });
+  } catch (error) {
+    console.error("Materials API Error:", error);
+    if (error.code === 401) {
+      return res.json({ ok: true, connected: false, materials: [], error: "Token expired" });
+    }
+    res.status(500).json({ ok: false, message: "Failed to fetch materials" });
+  }
+});
+
 app.post("/api/classroom/upload", authMiddleware, upload.single('file'), async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ ok: false, message: "Only admins can upload" });

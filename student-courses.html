@@ -8,21 +8,40 @@
     <link rel="stylesheet" href="role-page.css">
     <link rel="stylesheet" href="theme.css">
     <script src="theme-init.js"></script>
+    <style>
+        .course-card {
+            background: var(--gray-900);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .primary-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(15, 98, 254, 0.4);
+        }
+    </style>
 </head>
 
 <body data-role="student" data-section="courses">
     <div class="page-shell">
         <header class="hero">
             <p class="eyebrow" id="heroEyebrow">Student Space</p>
-            <h1 id="pageTitle">Courses</h1>
-            <p class="lede" id="pageSubtitle">Browse active paths and prep for what’s launching next.</p>
+            <h1 id="pageTitle">My Courses</h1>
+            <p class="lede" id="pageSubtitle">View your Google Classroom courses, assignments, and materials.</p>
             <div class="hero-actions">
                 <a class="ghost-link" href="homepage.html">← Back to Engagement Feed</a>
             </div>
         </header>
         <section class="panel-grid" id="panelGrid"></section>
     </div>
-    <script src="role-page.js"></script>
+    <script src="student-courses.js"></script>
     <script src="chatbot.js"></script>
 </body>
 
