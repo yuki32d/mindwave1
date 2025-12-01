@@ -355,18 +355,32 @@ function playUnjumble(game, container) {
                 <p style="margin-bottom: 24px; color: #9ea4b6;">Click two lines to swap them. Arrange in correct order.</p>
                 <div id="code-lines" style="display: flex; flex-direction: column; gap: 8px;">
                     ${shuffledLines.map((line, idx) => `
-                        <div class="option-btn" style="cursor: pointer; display: flex; justify-content: space-between; ${selectedIdx === idx ? 'border-color: #0f62fe; background: rgba(15, 98, 254, 0.1);' : ''}" onclick="moveLine(${idx})">
+                        <div class="option-btn line-item" data-idx="${idx}" style="cursor: pointer; display: flex; justify-content: space-between; ${selectedIdx === idx ? 'border-color: #0f62fe; background: rgba(15, 98, 254, 0.1);' : ''}">
                             <span style="font-family: monospace;">${line.text}</span>
                             <span style="color: #666;">↕</span>
                         </div>
                     `).join('')}
                 </div>
-                <button class="submit-btn" onclick="checkUnjumble()" style="margin-top: 32px; width: 100%;">Submit Solution</button>
+                <button id="unjumbleSubmitBtn" class="submit-btn" style="margin-top: 32px; width: 100%;">Submit Solution</button>
             </div>
         `;
+
+        // Attach event listeners to line items
+        container.querySelectorAll('.line-item').forEach(lineEl => {
+            lineEl.addEventListener('click', () => {
+                const idx = parseInt(lineEl.dataset.idx);
+                moveLine(idx);
+            });
+        });
+
+        // Attach submit button listener
+        const submitBtn = document.getElementById('unjumbleSubmitBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', checkUnjumble);
+        }
     }
 
-    window.moveLine = (idx) => {
+    function moveLine(idx) {
         if (selectedIdx === null) {
             selectedIdx = idx;
         } else {
@@ -376,9 +390,9 @@ function playUnjumble(game, container) {
             selectedIdx = null;
         }
         render();
-    };
+    }
 
-    window.checkUnjumble = () => {
+    function checkUnjumble() {
         let correct = 0;
         shuffledLines.forEach((line, idx) => {
             if (line.originalIndex === idx) correct++;
@@ -387,9 +401,9 @@ function playUnjumble(game, container) {
         const score = Math.round(accuracy * game.totalPoints);
         saveResult(game, score, game.totalPoints, startTime);
         showResult(container, score, game.totalPoints, startTime);
-    };
+    }
 
-    startTimer(game.duration || 10, '#appContainer', window.checkUnjumble);
+    startTimer(game.duration || 10, '#appContainer', checkUnjumble);
     render();
 }
 
@@ -408,7 +422,7 @@ function playSorter(game, container) {
                 <h2 style="font-size: 32px; margin-bottom: 32px;">${currentItem.name}</h2>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
                     ${(game.categories || []).map(cat => `
-                        <button class="option-btn" onclick="sortItem('${cat}')" style="text-align: center; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        <button class="option-btn category-btn" data-category="${cat}" style="text-align: center; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
                             ${cat}
                         </button>
                     `).join('')}
@@ -416,13 +430,21 @@ function playSorter(game, container) {
                 <p style="margin-top: 24px; color: #9ea4b6;">${remainingItems.length} items remaining</p>
             </div>
         `;
+
+        // Attach event listeners to category buttons
+        container.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const cat = btn.dataset.category;
+                sortItem(cat);
+            });
+        });
     }
 
-    window.sortItem = (cat) => {
+    function sortItem(cat) {
         if (cat === currentItem.category) score += 10;
         currentItem = remainingItems.pop();
         render();
-    };
+    }
 
     function finish() {
         saveResult(game, score, game.totalPoints, startTime);
@@ -446,7 +468,7 @@ function playFillIn(game, container) {
             if (part.startsWith('[') && part.endsWith(']')) {
                 const idx = blankIndex++;
                 const filled = filledBlanks[idx];
-                return `<span onclick="clearBlank(${idx})" style="display: inline-block; min-width: 60px; border-bottom: 2px solid var(--blue); color: var(--blue); text-align: center; cursor: pointer; margin: 0 4px;">${filled || '___'}</span>`;
+                return `<span class="blank-slot" data-idx="${idx}" style="display: inline-block; min-width: 60px; border-bottom: 2px solid var(--blue); color: var(--blue); text-align: center; cursor: pointer; margin: 0 4px;">${filled || '___'}</span>`;
             }
             return part;
         }).join('').replace(/\n/g, '<br>');
@@ -459,17 +481,39 @@ function playFillIn(game, container) {
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 12px;">
                     ${wordBank.map((word, idx) => `
-                        <button class="option-btn" onclick="useWord('${word}', ${idx})" style="width: auto; padding: 8px 16px; margin: 0; ${Object.values(filledBlanks).includes(word) ? 'opacity: 0.5; pointer-events: none;' : ''}">
+                        <button class="option-btn word-btn" data-word="${word}" data-idx="${idx}" style="width: auto; padding: 8px 16px; margin: 0; ${Object.values(filledBlanks).includes(word) ? 'opacity: 0.5; pointer-events: none;' : ''}">
                             ${word}
                         </button>
                     `).join('')}
                 </div>
-                <button class="submit-btn" onclick="checkFillIn()" style="margin-top: 32px; width: 100%;">Submit</button>
+                <button id="fillinSubmitBtn" class="submit-btn" style="margin-top: 32px; width: 100%;">Submit</button>
             </div>
         `;
+
+        // Attach event listeners to word buttons
+        container.querySelectorAll('.word-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const word = btn.dataset.word;
+                useWord(word);
+            });
+        });
+
+        // Attach event listeners to blank slots
+        container.querySelectorAll('.blank-slot').forEach(slot => {
+            slot.addEventListener('click', () => {
+                const idx = parseInt(slot.dataset.idx);
+                clearBlank(idx);
+            });
+        });
+
+        // Attach submit button listener
+        const submitBtn = document.getElementById('fillinSubmitBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', checkFillIn);
+        }
     }
 
-    window.useWord = (word, wordIdx) => {
+    function useWord(word) {
         for (let i = 0; i < (game.blanks || []).length; i++) {
             if (!filledBlanks[i]) {
                 filledBlanks[i] = word;
@@ -477,14 +521,14 @@ function playFillIn(game, container) {
                 return;
             }
         }
-    };
+    }
 
-    window.clearBlank = (idx) => {
+    function clearBlank(idx) {
         delete filledBlanks[idx];
         render();
-    };
+    }
 
-    window.checkFillIn = () => {
+    function checkFillIn() {
         let correct = 0;
         (game.blanks || []).forEach((ans, idx) => {
             if (filledBlanks[idx] === ans) correct++;
@@ -492,9 +536,9 @@ function playFillIn(game, container) {
         const score = Math.round((correct / (game.blanks ? game.blanks.length : 1)) * game.totalPoints);
         saveResult(game, score, game.totalPoints, startTime);
         showResult(container, score, game.totalPoints, startTime);
-    };
+    }
 
-    startTimer(game.duration || 10, '#appContainer', window.checkFillIn);
+    startTimer(game.duration || 10, '#appContainer', checkFillIn);
     render();
 }
 
@@ -510,43 +554,66 @@ function playSQL(game, container) {
                 <p style="margin-bottom: 16px; color: #9ea4b6;">${game.description || ''}</p>
                 <div style="min-height: 60px; background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 12px; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
                     ${builtQuery.map((block, idx) => `
-                        <button onclick="removeFromQuery(${idx})" style="background: var(--blue); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">${block}</button>
+                        <button class="query-block-btn" data-idx="${idx}" style="background: var(--blue); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">${block}</button>
                     `).join('')}
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 12px;">
                     ${availableBlocks.map((block, idx) => `
-                        <button class="option-btn" onclick="addToQuery('${block}', ${idx})" style="width: auto; padding: 8px 16px; margin: 0;">
+                        <button class="option-btn available-block-btn" data-block="${block}" data-idx="${idx}" style="width: auto; padding: 8px 16px; margin: 0;">
                             ${block}
                         </button>
                     `).join('')}
                 </div>
-                <button class="submit-btn" onclick="checkSQL()" style="margin-top: 32px; width: 100%;">Submit Query</button>
+                <button id="sqlSubmitBtn" class="submit-btn" style="margin-top: 32px; width: 100%;">Submit Query</button>
             </div>
         `;
+
+        // Attach event listeners to query blocks (for removal)
+        container.querySelectorAll('.query-block-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.dataset.idx);
+                removeFromQuery(idx);
+            });
+        });
+
+        // Attach event listeners to available blocks (for adding)
+        container.querySelectorAll('.available-block-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const block = btn.dataset.block;
+                const idx = parseInt(btn.dataset.idx);
+                addToQuery(block, idx);
+            });
+        });
+
+        // Attach submit button listener
+        const submitBtn = document.getElementById('sqlSubmitBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', checkSQL);
+        }
     }
 
-    window.addToQuery = (block, idx) => {
+    function addToQuery(block, idx) {
         builtQuery.push(block);
         availableBlocks.splice(idx, 1);
         render();
-    };
+    }
 
-    window.removeFromQuery = (idx) => {
+    function removeFromQuery(idx) {
         const block = builtQuery[idx];
         availableBlocks.push(block);
         builtQuery.splice(idx, 1);
         render();
-    };
+    }
 
-    window.checkSQL = () => {
+    function checkSQL() {
         const correctQuery = (game.blocks || []).join(' ');
         const userQuery = builtQuery.join(' ');
         const score = correctQuery === userQuery ? game.totalPoints : Math.round((builtQuery.filter((b, i) => b === game.blocks[i]).length / game.blocks.length) * game.totalPoints);
         saveResult(game, score, game.totalPoints, startTime);
         showResult(container, score, game.totalPoints, startTime);
-    };
+    }
 
-    startTimer(game.duration || 10, '#appContainer', window.checkSQL);
+    startTimer(game.duration || 10, '#appContainer', checkSQL);
     render();
 }
 
@@ -571,7 +638,7 @@ function playDebug(game, container) {
                     <textarea id="studentCodeEditor"></textarea>
                 </div>
 
-                <button class="submit-btn" onclick="checkDebug()" style="margin-top: 24px; width: 100%;">Submit Fix</button>
+                <button id="debugSubmitBtn" class="submit-btn" style="margin-top: 24px; width: 100%;">Submit Fix</button>
             </div>
         `;
 
@@ -599,10 +666,16 @@ function playDebug(game, container) {
                 tabSize: 4
             });
             studentEditor.setValue(game.buggyCode || ''); // Pre-fill with buggy code
+
+            // Attach submit button listener
+            const submitBtn = document.getElementById('debugSubmitBtn');
+            if (submitBtn) {
+                submitBtn.addEventListener('click', checkDebug);
+            }
         }, 100);
     }
 
-    window.checkDebug = () => {
+    function checkDebug() {
         if (!studentEditor) {
             alert('Editor not loaded yet, please wait...');
             return;
@@ -636,16 +709,24 @@ function playDebug(game, container) {
                     ` : ''}
                 </div>
                 
-                <button class="primary-btn" onclick="window.location.href='student-game.html'" style="width: 100%;">Back to Games</button>
+                <button id="backToGamesBtn" class="primary-btn" style="width: 100%;">Back to Games</button>
             </div>
         `;
+
+        // Attach back button listener
+        const backBtn = document.getElementById('backToGamesBtn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                window.location.href = 'student-game.html';
+            });
+        }
 
         if (similarity >= 70) {
             fireConfetti();
         }
-    };
+    }
 
-    startTimer(game.duration || 15, '#appContainer', window.checkDebug);
+    startTimer(game.duration || 15, '#appContainer', checkDebug);
     render();
 }
 
