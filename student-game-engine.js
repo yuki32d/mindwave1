@@ -666,7 +666,7 @@ function saveResult(game, score, totalPoints, startTime) {
 
     const activity = {
         id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-        gameId: game.id,
+        gameId: game._id || game.id,
         gameTitle: game.title,
         gameType: game.type,
         studentEmail: currentUserEmail,
@@ -674,6 +674,7 @@ function saveResult(game, score, totalPoints, startTime) {
         score: percentage,
         rawScore: rawScore,
         timeTaken: timeTaken,
+        startedAt: new Date(startTime).toISOString(),
         completedAt: new Date().toISOString(),
         status: 'completed'
     };
