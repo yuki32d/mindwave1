@@ -322,10 +322,34 @@ if (signOutControl) signOutControl.addEventListener('click', performLogout);
 if (gamesNavBtn) gamesNavBtn.addEventListener('click', () => document.getElementById('gamesPanel')?.scrollIntoView({ behavior: 'smooth' }));
 
 // --- System Status Modal ---
-function showSystemStatus() {
+async function showSystemStatus() {
     const modal = document.getElementById('statusModal');
     if (!modal) return;
     modal.style.display = 'flex';
+
+    // Fetch real-time data
+    try {
+        // Get users count
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        document.getElementById('statusTotalUsers').textContent = users.length;
+
+        // Get active games count
+        const gamesData = await fetchAPI('/api/games/published');
+        if (gamesData && gamesData.ok) {
+            document.getElementById('statusActiveGames').textContent = gamesData.games.length;
+        }
+
+        // Get announcements count
+        const announcementsData = await fetchAPI('/api/announcements');
+        if (announcementsData && announcementsData.ok) {
+            document.getElementById('statusAnnouncements').textContent = announcementsData.announcements.length;
+        }
+
+        // Update timestamp
+        document.getElementById('statusLastUpdated').textContent = new Date().toLocaleTimeString();
+    } catch (error) {
+        console.error('Failed to load system status:', error);
+    }
 
     // Close on click outside
     modal.onclick = function (e) {
