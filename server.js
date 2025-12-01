@@ -1246,27 +1246,68 @@ app.post("/api/chat", async (req, res) => {
       return res.status(500).json({ ok: false, reply: "I'm not fully configured yet (Missing API Key)." });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: "You are Mindwave AI, a helpful assistant for students on the Mindwave learning platform. You help with coding, quizzes, and general questions. Be concise, encouraging, and use emojis. If asked about the platform, you are part of Mindwave, a gamified learning system."
-    });
+    console.log("API Key present:", apiKey.substring(0, 10) + "...");
 
-    const chat = model.startChat({
-      history: history || [],
-      generationConfig: {
-        maxOutputTokens: 1000,
-      },
-    });
+    // Try to list models using direct API call
+    try {
+      const listResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      const listData = await listResponse.json();
 
-    const result = await chat.sendMessage(message);
-    const response = await result.response;
-    const text = response.text();
+      if (listData.models) {
+        console.log("Available models:", listData.models.map(m => m.name));
 
-    res.json({ ok: true, reply: text });
+        // Prioritize flash models (better quota) over pro models
+        const preferredModels = [
+          'models/gemini-2.5-flash',
+          'models/gemini-2.0-flash',
+          'models/gemini-flash-latest',
+          'models/gemini-2.0-flash-exp'
+        ];
+
+        let contentModel = null;
+
+        // Try preferred models first
+        for (const preferredName of preferredModels) {
+          contentModel = listData.models.find(m =>
+            m.name === preferredName &&
+            m.supportedGenerationMethods &&
+            m.supportedGenerationMethods.includes('generateContent')
+          );
+          if (contentModel) break;
+        }
+
+        // If no preferred model, use any available model
+        if (!contentModel) {
+          contentModel = listData.models.find(m =>
+            m.supportedGenerationMethods &&
+            m.supportedGenerationMethods.includes('generateContent')
+          );
+        }
+
+        if (contentModel) {
+          console.log("Using model:", contentModel.name);
+
+          // Extract just the model name (remove "models/" prefix if present)
+          const modelName = contentModel.name.replace('models/', '');
+
+          const genAI = new GoogleGenerativeAI(apiKey);
+          const model = genAI.getGenerativeModel({ model: modelName });
+          const result = await model.generateContent(message);
+          const response = await result.response;
+          const text = response.text();
+
+          return res.json({ ok: true, reply: text });
+        }
+      }
+
+      throw new Error("No compatible models found");
+    } catch (modelError) {
+      console.error("Model Error Details:", modelError.message);
+      throw modelError;
+    }
   } catch (error) {
     console.error("Chat Error:", error);
-    res.status(500).json({ ok: false, reply: "I'm having trouble connecting to my brain right now. 🧠💥" });
+    res.status(500).json({ ok: false, reply: "I'm having trouble connecting to my brain right now. 🧠💥 Error: " + error.message });
   }
 });
 

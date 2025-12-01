@@ -263,7 +263,10 @@
                 <div class="mw-chat-title">
                     <span>✨</span> Mindwave AI
                 </div>
-                <button class="mw-chat-close" id="mwChatClose">&times;</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="mw-chat-close" id="mwChatNew" title="New Chat">🔄</button>
+                    <button class="mw-chat-close" id="mwChatClose" title="Close">&times;</button>
+                </div>
             </div>
             <div class="mw-chat-messages" id="mwChatMessages">
                 <div class="mw-message bot">
@@ -287,6 +290,7 @@
     const windowEl = document.getElementById('mwChatWindow');
     const toggleBtn = document.getElementById('mwChatToggle');
     const closeBtn = document.getElementById('mwChatClose');
+    const newChatBtn = document.getElementById('mwChatNew');
     const inputEl = document.getElementById('mwChatInput');
     const sendBtn = document.getElementById('mwChatSend');
     const messagesEl = document.getElementById('mwChatMessages');
@@ -307,8 +311,19 @@
         }
     }
 
+    // New Chat
+    function startNewChat() {
+        chatHistory = [];
+        messagesEl.innerHTML = `
+            <div class="mw-message bot">
+                Hello! I'm your Mindwave AI assistant. How can I help you with your studies today? 🚀
+            </div>
+        `;
+    }
+
     toggleBtn.addEventListener('click', toggleChat);
     closeBtn.addEventListener('click', toggleChat);
+    newChatBtn.addEventListener('click', startNewChat);
 
     // Send Message
     async function sendMessage() {
@@ -334,6 +349,10 @@
                 })
             });
 
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status} ${response.statusText}`);
+            }
+
             const data = await response.json();
 
             // Remove Typing Indicator
@@ -347,13 +366,14 @@
                 chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
             } else {
                 addMessage("Sorry, I'm having trouble connecting right now. Please try again.", 'bot');
+                console.error('API Error:', data);
             }
 
         } catch (error) {
             console.error('Chat error:', error);
             removeMessage(typingId);
             isTyping = false;
-            addMessage("Network error. Please check your connection.", 'bot');
+            addMessage(`Network error: ${error.message}. Please check your connection.`, 'bot');
         }
     }
 
