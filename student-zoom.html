@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDWAVE – Zoom Integration</title>
+    <link rel="stylesheet" href="role-page.css">
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme-init.js"></script>
+    <style>
+        .meeting-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+            border-color: #2D8CFF !important;
+        }
+    </style>
+</head>
+
+<body data-role="student" data-section="zoom">
+    <div class="page-shell">
+        <header class="hero">
+            <p class="eyebrow" id="heroEyebrow">Student Space</p>
+            <h1 id="pageTitle">Zoom Classes</h1>
+            <p class="lede" id="pageSubtitle">Join virtual classrooms and access recorded sessions.</p>
+            <div class="hero-actions">
+                <a class="ghost-link" href="homepage.html">← Back to Engagement Feed</a>
+            </div>
+        </header>
+        <section class="panel-grid" id="panelGrid"
+            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;">
+            <!-- Content loaded via JS -->
+        </section>
+    </div>
+    <script src="student-zoom.js"></script>
+    <script src="chatbot.js"></script>
+</body>
+
+</html>

@@ -426,6 +426,101 @@
         .games-list {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            line-height: 1.5;
+        }
+
+        .ghost-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: inherit;
+            border-radius: 999px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .feed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .panel {
+            background: var(--gray-900);
+            border-radius: var(--card-radius);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+        }
+
+        .panel h2 {
+            margin: 0 0 12px;
+            font-size: 22px;
+        }
+
+        .panel p.description {
+            margin: 0 0 20px;
+            color: var(--text-muted);
+        }
+
+        .feed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feed-item {
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .feed-item h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .feed-item small {
+            color: var(--text-muted);
+        }
+
+        .feed-item p {
+            margin: 8px 0 0;
+            color: #d5d9ea;
+            line-height: 1.4;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 4px 12px;
+            margin-top: 8px;
+        }
+
+        .tag.pink {
+            background: rgba(255, 55, 95, 0.18);
+            color: #ff5b87;
+        }
+
+        .tag.blue {
+            background: rgba(15, 98, 254, 0.18);
+            color: var(--blue);
+        }
+
+        .tag.green {
+            background: rgba(52, 199, 89, 0.2);
+            color: #34c759;
+        }
+
+        .games-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 18px;
             margin-top: 20px;
         }
@@ -502,6 +597,8 @@
                     <li><a href="student-courses.html"><span class="icon">📚</span>Courses</a></li>
                     <li><a href="student-community.html"><span class="icon">👥</span>Community</a></li>
                     <li><a href="student-game.html"><span class="icon">🎯</span>Games</a></li>
+                    <li><a href="student-github.html"><span class="icon">🐙</span>GitHub Repos</a></li>
+                    <li><a href="student-zoom.html"><span class="icon">🎥</span>Zoom Classes</a></li>
                 </ul>
                 <div class="sidebar-footer">
                     <a class="ghost-btn" style="width: 100%;" href="student-help.html">❔ Help</a>

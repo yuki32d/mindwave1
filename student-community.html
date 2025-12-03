@@ -1,26 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MINDWAVE – Student Community</title>
     <link rel="stylesheet" href="role-page.css">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="student-community.css">
+    <script src="theme-init.js"></script>
 </head>
+
 <body data-role="student" data-section="community">
     <div class="page-shell">
         <header class="hero">
+            <a class="ghost-link" href="homepage.html">← Back to Dashboard</a>
             <p class="eyebrow" id="heroEyebrow">Student Space</p>
             <h1 id="pageTitle">Community</h1>
-            <p class="lede" id="pageSubtitle">Find peers, events, and async rituals to join today.</p>
+            <p class="lede" id="pageSubtitle">Share projects, collaborate, and connect with fellow students.</p>
             <div class="hero-actions">
-                <a class="ghost-link" href="homepage.html">← Back to Engagement Feed</a>
+                <button class="primary-btn" id="createPostBtn">✨ Create Post</button>
+                <button class="ghost-btn" id="myPostsBtn">📝 My Posts</button>
             </div>
         </header>
-        <section class="panel-grid" id="panelGrid"></section>
+
+        <!-- Search and Filter Bar -->
+        <div class="filter-section">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="🔍 Search posts..." />
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-sort="recent">🕒 Recent</button>
+                <button class="filter-btn" data-sort="popular">🔥 Popular</button>
+                <button class="filter-btn" data-sort="trending">📈 Trending</button>
+            </div>
+        </div>
+
+        <!-- Trending Tags -->
+        <div class="trending-tags" id="trendingTags">
+            <h3>🏷️ Trending Tags</h3>
+            <div class="tag-list" id="tagList">
+                <!-- Tags will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Posts Feed -->
+        <div class="posts-container" id="postsContainer">
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p>Loading posts...</p>
+            </div>
+        </div>
+
+        <!-- Load More Button -->
+        <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+            <button class="ghost-btn" id="loadMoreBtn">Load More Posts</button>
+        </div>
     </div>
-    <script src="role-page.js"></script>
+
+    <!-- Create Post Modal -->
+    <div class="modal" id="createPostModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Post</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createPostForm">
+                    <div class="form-group">
+                        <label for="postTitle">Title *</label>
+                        <input type="text" id="postTitle" maxlength="300" required
+                            placeholder="Give your post a catchy title...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="postContent">Content *</label>
+                        <textarea id="postContent" rows="6" maxlength="5000" required
+                            placeholder="Share your thoughts, project details, or ask a question..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="postType">Post Type</label>
+                        <select id="postType">
+                            <option value="text">📝 Text Post</option>
+                            <option value="image">🖼️ Image Post</option>
+                            <option value="video">🎥 Video Post</option>
+                            <option value="project">🚀 Project Showcase</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="mediaUploadGroup" style="display: none;">
+                        <label for="mediaFile">Upload Media</label>
+                        <input type="file" id="mediaFile" accept="image/*,video/*">
+                        <small class="help-text">Max 50MB for videos, 5MB for images</small>
+                    </div>
+
+                    <div class="form-group" id="projectUrlGroup" style="display: none;">
+                        <label for="projectUrl">Project URL</label>
+                        <input type="url" id="projectUrl" placeholder="https://github.com/username/project">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="postTags">Tags (comma separated)</label>
+                        <input type="text" id="postTags" placeholder="e.g., javascript, web-dev, project">
+                        <small class="help-text">Add tags to help others find your post</small>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="ghost-btn" id="cancelPostBtn">Cancel</button>
+                        <button type="submit" class="primary-btn">🚀 Publish Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Detail Modal -->
+    <div class="modal" id="postDetailModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Post Details</h2>
+                <button class="close-btn" id="closeDetailModalBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="postDetailContent">
+                <!-- Post details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="student-community.js"></script>
+    <script src="chatbot.js"></script>
 </body>
+
 </html>
-
-
-

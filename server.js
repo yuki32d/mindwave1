@@ -30,7 +30,15 @@ const {
   SMTP_FROM = "no-reply@mindwave.local",
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
-  GOOGLE_REDIRECT_URI = "http://localhost:8081/auth/google/callback"
+  GOOGLE_REDIRECT_URI = "http://localhost:8081/auth/google/callback",
+  // GitHub OAuth
+  GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET,
+  GITHUB_REDIRECT_URI = "http://localhost:8081/auth/github/callback",
+  // Zoom OAuth
+  ZOOM_CLIENT_ID,
+  ZOOM_CLIENT_SECRET,
+  ZOOM_REDIRECT_URI = "http://localhost:8081/auth/zoom/callback"
 } = process.env;
 
 let mailer = null;
@@ -100,7 +108,13 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: { type: String, enum: ["student", "admin"], default: "student" },
     googleAccessToken: { type: String },
-    googleRefreshToken: { type: String }
+    googleRefreshToken: { type: String },
+    // GitHub Integration
+    githubAccessToken: { type: String },
+    githubUsername: { type: String },
+    // Zoom Integration
+    zoomAccessToken: { type: String },
+    zoomRefreshToken: { type: String }
   },
   { timestamps: true }
 );
@@ -240,6 +254,45 @@ const announcementSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Announcement = mongoose.model("Announcement", announcementSchema);
+
+// Community Feature Schemas
+const communityPostSchema = new mongoose.Schema({
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  title: { type: String, required: true, maxlength: 300 },
+  content: { type: String, required: true, maxlength: 5000 },
+  postType: { type: String, enum: ['text', 'image', 'video', 'project'], default: 'text' },
+  mediaUrl: { type: String }, // For images/videos
+  projectUrl: { type: String }, // For project links
+  tags: [{ type: String }], // Hashtags or category tags
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  likeCount: { type: Number, default: 0 },
+  commentCount: { type: Number, default: 0 },
+  viewCount: { type: Number, default: 0 },
+  isPinned: { type: Boolean, default: false },
+  isReported: { type: Boolean, default: false },
+  reportCount: { type: Number, default: 0 }
+}, { timestamps: true });
+
+const communityCommentSchema = new mongoose.Schema({
+  postId: { type: mongoose.Schema.Types.ObjectId, ref: 'CommunityPost', required: true },
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  content: { type: String, required: true, maxlength: 2000 },
+  parentComment: { type: mongoose.Schema.Types.ObjectId, ref: 'CommunityComment' }, // For nested replies
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  likeCount: { type: Number, default: 0 },
+  isDeleted: { type: Boolean, default: false }
+}, { timestamps: true });
+
+const postReportSchema = new mongoose.Schema({
+  postId: { type: mongoose.Schema.Types.ObjectId, ref: 'CommunityPost', required: true },
+  reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  reason: { type: String, required: true },
+  status: { type: String, enum: ['pending', 'reviewed', 'resolved'], default: 'pending' }
+}, { timestamps: true });
+
+const CommunityPost = mongoose.model("CommunityPost", communityPostSchema);
+const CommunityComment = mongoose.model("CommunityComment", communityCommentSchema);
+const PostReport = mongoose.model("PostReport", postReportSchema);
 
 
 const app = express();
@@ -669,6 +722,535 @@ app.delete("/api/announcements/:id", authMiddleware, async (req, res) => {
     res.json({ ok: true, message: "Announcement deleted" });
   } catch (error) {
     console.error("Delete announcement error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// ============================================
+// Community Feature Endpoints
+// ============================================
+
+// Create a new community post
+app.post("/api/community/posts", authMiddleware, uploadWithExt.single('media'), async (req, res) => {
+  try {
+    const { title, content, postType, projectUrl, tags } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ ok: false, message: "Title and content are required" });
+    }
+
+    const postData = {
+      author: req.user.sub,
+      title,
+      content,
+      postType: postType || 'text',
+      projectUrl: projectUrl || null,
+      tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())) : []
+    };
+
+    // Add media URL if file was uploaded
+    if (req.file) {
+      postData.mediaUrl = `/uploads/${req.file.filename}`;
+    }
+
+    const post = await CommunityPost.create(postData);
+    const populatedPost = await CommunityPost.findById(post._id).populate('author', 'name email');
+
+    // Create notification for all students
+    await Notification.create({
+      recipientRole: 'student',
+      title: 'New Community Post',
+      message: `${req.user.name} shared: ${title}`,
+      type: 'info',
+      link: '/student-community.html'
+    });
+
+    res.status(201).json({ ok: true, post: populatedPost });
+  } catch (error) {
+    console.error("Create post error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Get all community posts with pagination and filters
+app.get("/api/community/posts", async (req, res) => {
+  try {
+    const { sort = 'recent', tag, page = 1, limit = 20, search } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    let query = {};
+
+    // Filter by tag if provided
+    if (tag) {
+      query.tags = tag;
+    }
+
+    // Search in title and content
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    let sortOption = {};
+    switch (sort) {
+      case 'popular':
+        sortOption = { likeCount: -1, createdAt: -1 };
+        break;
+      case 'trending':
+        sortOption = { viewCount: -1, likeCount: -1, createdAt: -1 };
+        break;
+      case 'recent':
+      default:
+        sortOption = { isPinned: -1, createdAt: -1 };
+    }
+
+    const posts = await CommunityPost.find(query)
+      .populate('author', 'name email')
+      .sort(sortOption)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await CommunityPost.countDocuments(query);
+
+    res.json({
+      ok: true,
+      posts,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error("Get posts error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Get single post with comments
+app.get("/api/community/posts/:id", async (req, res) => {
+  try {
+    const post = await CommunityPost.findById(req.params.id)
+      .populate('author', 'name email');
+
+    if (!post) {
+      return res.status(404).json({ ok: false, message: "Post not found" });
+    }
+
+    const comments = await CommunityComment.find({ postId: req.params.id, parentComment: null })
+      .populate('author', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.json({ ok: true, post, comments });
+  } catch (error) {
+    console.error("Get post error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Update post (author only)
+app.put("/api/community/posts/:id", authMiddleware, async (req, res) => {
+  try {
+    const post = await CommunityPost.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({ ok: false, message: "Post not found" });
+    }
+
+    if (post.author.toString() !== req.user.sub) {
+      return res.status(403).json({ ok: false, message: "You can only edit your own posts" });
+    }
+
+    const { title, content, tags } = req.body;
+
+    if (title) post.title = title;
+    if (content) post.content = content;
+    if (tags) post.tags = Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim());
+
+    await post.save();
+    const updatedPost = await CommunityPost.findById(post._id).populate('author', 'name email');
+
+    res.json({ ok: true, post: updatedPost });
+  } catch (error) {
+    console.error("Update post error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Delete post (author or admin)
+app.delete("/api/community/posts/:id", authMiddleware, async (req, res) => {
+  try {
+    const post = await CommunityPost.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({ ok: false, message: "Post not found" });
+    }
+
+    if (post.author.toString() !== req.user.sub && req.user.role !== 'admin') {
+      return res.status(403).json({ ok: false, message: "Unauthorized" });
+    }
+
+    // Delete associated media file if exists
+    if (post.mediaUrl) {
+      const filePath = path.join(process.cwd(), post.mediaUrl);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    // Delete all comments associated with this post
+    await CommunityComment.deleteMany({ postId: req.params.id });
+
+    await CommunityPost.findByIdAndDelete(req.params.id);
+
+    res.json({ ok: true, message: "Post deleted successfully" });
+  } catch (error) {
+    console.error("Delete post error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Toggle like on post
+app.post("/api/community/posts/:id/like", authMiddleware, async (req, res) => {
+  try {
+    const post = await CommunityPost.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({ ok: false, message: "Post not found" });
+    }
+
+    const userId = req.user.sub;
+    const likeIndex = post.likes.indexOf(userId);
+
+    if (likeIndex > -1) {
+      // Unlike
+      post.likes.splice(likeIndex, 1);
+      post.likeCount = Math.max(0, post.likeCount - 1);
+    } else {
+      // Like
+      post.likes.push(userId);
+      post.likeCount += 1;
+    }
+
+    await post.save();
+
+    res.json({ ok: true, liked: likeIndex === -1, likeCount: post.likeCount });
+  } catch (error) {
+    console.error("Like post error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Increment view count
+app.post("/api/community/posts/:id/view", async (req, res) => {
+  try {
+    await CommunityPost.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } });
+    res.json({ ok: true });
+  } catch (error) {
+    console.error("View post error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Add comment to post
+app.post("/api/community/posts/:id/comments", authMiddleware, async (req, res) => {
+  try {
+    const { content, parentComment } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ ok: false, message: "Content is required" });
+    }
+
+    const post = await CommunityPost.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ ok: false, message: "Post not found" });
+    }
+
+    const comment = await CommunityComment.create({
+      postId: req.params.id,
+      author: req.user.sub,
+      content,
+      parentComment: parentComment || null
+    });
+
+    // Increment comment count on post
+    post.commentCount += 1;
+    await post.save();
+
+    const populatedComment = await CommunityComment.findById(comment._id)
+      .populate('author', 'name email');
+
+    res.status(201).json({ ok: true, comment: populatedComment });
+  } catch (error) {
+    console.error("Add comment error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Get comments for a post
+app.get("/api/community/posts/:id/comments", async (req, res) => {
+  try {
+    const comments = await CommunityComment.find({
+      postId: req.params.id,
+      parentComment: null,
+      isDeleted: false
+    })
+      .populate('author', 'name email')
+      .sort({ createdAt: -1 });
+
+    // Get replies for each comment
+    const commentsWithReplies = await Promise.all(
+      comments.map(async (comment) => {
+        const replies = await CommunityComment.find({
+          parentComment: comment._id,
+          isDeleted: false
+        })
+          .populate('author', 'name email')
+          .sort({ createdAt: 1 });
+
+        return {
+          ...comment.toObject(),
+          replies
+        };
+      })
+    );
+
+    res.json({ ok: true, comments: commentsWithReplies });
+  } catch (error) {
+    console.error("Get comments error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Update comment (author only)
+app.put("/api/community/comments/:id", authMiddleware, async (req, res) => {
+  try {
+    const comment = await CommunityComment.findById(req.params.id);
+
+    if (!comment) {
+      return res.status(404).json({ ok: false, message: "Comment not found" });
+    }
+
+    if (comment.author.toString() !== req.user.sub) {
+      return res.status(403).json({ ok: false, message: "You can only edit your own comments" });
+    }
+
+    const { content } = req.body;
+    if (content) {
+      comment.content = content;
+      await comment.save();
+    }
+
+    const updatedComment = await CommunityComment.findById(comment._id)
+      .populate('author', 'name email');
+
+    res.json({ ok: true, comment: updatedComment });
+  } catch (error) {
+    console.error("Update comment error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Delete comment (author or admin)
+app.delete("/api/community/comments/:id", authMiddleware, async (req, res) => {
+  try {
+    const comment = await CommunityComment.findById(req.params.id);
+
+    if (!comment) {
+      return res.status(404).json({ ok: false, message: "Comment not found" });
+    }
+
+    if (comment.author.toString() !== req.user.sub && req.user.role !== 'admin') {
+      return res.status(403).json({ ok: false, message: "Unauthorized" });
+    }
+
+    // Mark as deleted instead of actually deleting
+    comment.isDeleted = true;
+    comment.content = "[This comment has been deleted]";
+    await comment.save();
+
+    // Decrement comment count on post
+    await CommunityPost.findByIdAndUpdate(comment.postId, { $inc: { commentCount: -1 } });
+
+    res.json({ ok: true, message: "Comment deleted successfully" });
+  } catch (error) {
+    console.error("Delete comment error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Toggle like on comment
+app.post("/api/community/comments/:id/like", authMiddleware, async (req, res) => {
+  try {
+    const comment = await CommunityComment.findById(req.params.id);
+
+    if (!comment) {
+      return res.status(404).json({ ok: false, message: "Comment not found" });
+    }
+
+    const userId = req.user.sub;
+    const likeIndex = comment.likes.indexOf(userId);
+
+    if (likeIndex > -1) {
+      comment.likes.splice(likeIndex, 1);
+      comment.likeCount = Math.max(0, comment.likeCount - 1);
+    } else {
+      comment.likes.push(userId);
+      comment.likeCount += 1;
+    }
+
+    await comment.save();
+
+    res.json({ ok: true, liked: likeIndex === -1, likeCount: comment.likeCount });
+  } catch (error) {
+    console.error("Like comment error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Report a post
+app.post("/api/community/posts/:id/report", authMiddleware, async (req, res) => {
+  try {
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({ ok: false, message: "Reason is required" });
+    }
+
+    const post = await CommunityPost.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ ok: false, message: "Post not found" });
+    }
+
+    // Check if user already reported this post
+    const existingReport = await PostReport.findOne({
+      postId: req.params.id,
+      reportedBy: req.user.sub
+    });
+
+    if (existingReport) {
+      return res.status(400).json({ ok: false, message: "You have already reported this post" });
+    }
+
+    await PostReport.create({
+      postId: req.params.id,
+      reportedBy: req.user.sub,
+      reason
+    });
+
+    // Update post report count
+    post.isReported = true;
+    post.reportCount += 1;
+    await post.save();
+
+    res.json({ ok: true, message: "Post reported successfully" });
+  } catch (error) {
+    console.error("Report post error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Get all reports (admin only)
+app.get("/api/community/reports", authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ ok: false, message: "Admin access required" });
+  }
+
+  try {
+    const reports = await PostReport.find({ status: 'pending' })
+      .populate('postId')
+      .populate('reportedBy', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.json({ ok: true, reports });
+  } catch (error) {
+    console.error("Get reports error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Resolve report (admin only)
+app.put("/api/community/reports/:id/resolve", authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ ok: false, message: "Admin access required" });
+  }
+
+  try {
+    const report = await PostReport.findById(req.params.id);
+    if (!report) {
+      return res.status(404).json({ ok: false, message: "Report not found" });
+    }
+
+    report.status = 'resolved';
+    await report.save();
+
+    res.json({ ok: true, message: "Report resolved" });
+  } catch (error) {
+    console.error("Resolve report error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Pin/unpin post (admin only)
+app.put("/api/community/posts/:id/pin", authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ ok: false, message: "Admin access required" });
+  }
+
+  try {
+    const post = await CommunityPost.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ ok: false, message: "Post not found" });
+    }
+
+    post.isPinned = !post.isPinned;
+    await post.save();
+
+    res.json({ ok: true, isPinned: post.isPinned });
+  } catch (error) {
+    console.error("Pin post error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Get posts by specific user
+app.get("/api/community/users/:userId/posts", async (req, res) => {
+  try {
+    const posts = await CommunityPost.find({ author: req.params.userId })
+      .populate('author', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.json({ ok: true, posts });
+  } catch (error) {
+    console.error("Get user posts error:", error);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+// Get trending tags
+app.get("/api/community/tags/trending", async (req, res) => {
+  try {
+    const posts = await CommunityPost.find({}).select('tags');
+    const tagCounts = {};
+
+    posts.forEach(post => {
+      post.tags.forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    });
+
+    const trendingTags = Object.entries(tagCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([tag, count]) => ({ tag, count }));
+
+    res.json({ ok: true, tags: trendingTags });
+  } catch (error) {
+    console.error("Get trending tags error:", error);
     res.status(500).json({ ok: false, message: "Server error" });
   }
 });
@@ -1129,6 +1711,248 @@ app.get("/auth/google/callback", async (req, res) => {
   }
 });
 
+// GitHub Integration
+app.get("/auth/github", (req, res) => {
+  if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
+    return res.status(500).send("GitHub Credentials not configured.");
+  }
+  const redirectUri = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${GITHUB_REDIRECT_URI}&scope=repo,user&state=${req.cookies.mindwave_token}`;
+  res.redirect(redirectUri);
+});
+
+app.get("/auth/github/callback", async (req, res) => {
+  const { code, state } = req.query;
+  if (!code) return res.status(400).send("No code provided");
+
+  try {
+    // Verify user from state
+    if (!state) return res.status(401).send("Authentication failed: No state returned");
+
+    let userId;
+    try {
+      const decoded = jwt.verify(state, JWT_SECRET);
+      userId = decoded.sub;
+    } catch (e) {
+      return res.status(401).send("Authentication failed: Invalid state token");
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).send("User not found");
+
+    // Exchange code for token
+    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        client_id: GITHUB_CLIENT_ID,
+        client_secret: GITHUB_CLIENT_SECRET,
+        code,
+        redirect_uri: GITHUB_REDIRECT_URI
+      })
+    });
+
+    const tokenData = await tokenResponse.json();
+
+    if (tokenData.error) {
+      throw new Error(tokenData.error_description);
+    }
+
+    user.githubAccessToken = tokenData.access_token;
+
+    // Fetch GitHub username
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: {
+        'Authorization': `token ${tokenData.access_token}`,
+        'User-Agent': 'Mindwave-App'
+      }
+    });
+    const userData = await userResponse.json();
+    if (userData.login) {
+      user.githubUsername = userData.login;
+    }
+
+    await user.save();
+    res.redirect("/student-github.html");
+  } catch (error) {
+    console.error("GitHub Auth Error:", error);
+    res.status(500).send("GitHub Authentication failed");
+  }
+});
+
+app.get("/api/github/repos", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.sub);
+    if (!user.githubAccessToken) {
+      return res.json({ ok: true, connected: false, repos: [] });
+    }
+
+    const response = await fetch('https://api.github.com/user/repos?sort=updated&per_page=10', {
+      headers: {
+        'Authorization': `token ${user.githubAccessToken}`,
+        'User-Agent': 'Mindwave-App'
+      }
+    });
+
+    if (response.status === 401) {
+      return res.json({ ok: true, connected: false, repos: [], error: "Token expired" });
+    }
+
+    const repos = await response.json();
+    res.json({ ok: true, connected: true, repos });
+  } catch (error) {
+    console.error("GitHub Repos Error:", error);
+    res.status(500).json({ ok: false, message: "Failed to fetch repos" });
+  }
+});
+
+app.get("/api/github/commits/:owner/:repo", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.sub);
+    if (!user.githubAccessToken) {
+      return res.status(401).json({ ok: false, message: "GitHub not connected" });
+    }
+
+    const { owner, repo } = req.params;
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=10`, {
+      headers: {
+        'Authorization': `token ${user.githubAccessToken}`,
+        'User-Agent': 'Mindwave-App'
+      }
+    });
+
+    const commits = await response.json();
+    res.json({ ok: true, commits });
+  } catch (error) {
+    console.error("GitHub Commits Error:", error);
+    res.status(500).json({ ok: false, message: "Failed to fetch commits" });
+  }
+});
+
+app.post("/api/github/submit-assignment", authMiddleware, async (req, res) => {
+  try {
+    const { repoUrl, comments } = req.body;
+    // In a real app, this would save to a submission schema
+    // For now, we'll just log it and return success
+    console.log(`Assignment submitted by ${req.user.sub}: ${repoUrl}`);
+
+    res.json({ ok: true, message: "Assignment submitted successfully via GitHub!" });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Submission failed" });
+  }
+});
+
+// Zoom Integration
+app.get("/auth/zoom", (req, res) => {
+  if (!ZOOM_CLIENT_ID || !ZOOM_CLIENT_SECRET) {
+    return res.status(500).send("Zoom Credentials not configured.");
+  }
+  const redirectUri = `https://zoom.us/oauth/authorize?response_type=code&client_id=${ZOOM_CLIENT_ID}&redirect_uri=${ZOOM_REDIRECT_URI}&state=${req.cookies.mindwave_token}`;
+  res.redirect(redirectUri);
+});
+
+app.get("/auth/zoom/callback", async (req, res) => {
+  const { code, state } = req.query;
+  if (!code) return res.status(400).send("No code provided");
+
+  try {
+    if (!state) return res.status(401).send("Authentication failed: No state returned");
+
+    let userId;
+    try {
+      const decoded = jwt.verify(state, JWT_SECRET);
+      userId = decoded.sub;
+    } catch (e) {
+      return res.status(401).send("Authentication failed: Invalid state token");
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).send("User not found");
+
+    const tokenResponse = await fetch('https://zoom.us/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${Buffer.from(`${ZOOM_CLIENT_ID}:${ZOOM_CLIENT_SECRET}`).toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: ZOOM_REDIRECT_URI
+      })
+    });
+
+    const tokenData = await tokenResponse.json();
+
+    if (tokenData.error) {
+      throw new Error(tokenData.error_description || tokenData.reason);
+    }
+
+    user.zoomAccessToken = tokenData.access_token;
+    user.zoomRefreshToken = tokenData.refresh_token;
+    await user.save();
+
+    res.redirect("/student-zoom.html");
+  } catch (error) {
+    console.error("Zoom Auth Error:", error);
+    res.status(500).send("Zoom Authentication failed");
+  }
+});
+
+app.get("/api/zoom/meetings", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.sub);
+    if (!user.zoomAccessToken) {
+      return res.json({ ok: true, connected: false, meetings: [] });
+    }
+
+    const response = await fetch('https://api.zoom.us/v2/users/me/meetings?type=upcoming', {
+      headers: {
+        'Authorization': `Bearer ${user.zoomAccessToken}`
+      }
+    });
+
+    if (response.status === 401) {
+      // Token expired - in a real app we'd use refresh token here
+      return res.json({ ok: true, connected: false, meetings: [], error: "Token expired" });
+    }
+
+    const data = await response.json();
+    res.json({ ok: true, connected: true, meetings: data.meetings || [] });
+  } catch (error) {
+    console.error("Zoom Meetings Error:", error);
+    res.status(500).json({ ok: false, message: "Failed to fetch meetings" });
+  }
+});
+
+app.get("/api/zoom/recordings", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.sub);
+    if (!user.zoomAccessToken) {
+      return res.status(401).json({ ok: false, message: "Zoom not connected" });
+    }
+
+    // Get recordings from the last month
+    const fromDate = new Date();
+    fromDate.setMonth(fromDate.getMonth() - 1);
+    const fromStr = fromDate.toISOString().split('T')[0];
+
+    const response = await fetch(`https://api.zoom.us/v2/users/me/recordings?from=${fromStr}`, {
+      headers: {
+        'Authorization': `Bearer ${user.zoomAccessToken}`
+      }
+    });
+
+    const data = await response.json();
+    res.json({ ok: true, recordings: data.meetings || [] });
+  } catch (error) {
+    console.error("Zoom Recordings Error:", error);
+    res.status(500).json({ ok: false, message: "Failed to fetch recordings" });
+  }
+});
+
 async function getGoogleClient(user) {
   if (!user.googleAccessToken) return null;
 
@@ -1290,9 +2114,10 @@ app.post("/api/classroom/upload", authMiddleware, upload.single('file'), async (
   }
 });
 
-// Chatbot Endpoint
+// Chatbot Endpoint - Google Gemini
 app.post("/api/chat", async (req, res) => {
   try {
+    console.log("Chat request received");
     const { message, history } = req.body;
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
@@ -1302,67 +2127,98 @@ app.post("/api/chat", async (req, res) => {
     }
 
     console.log("API Key present:", apiKey.substring(0, 10) + "...");
+    console.log("Message:", message);
 
-    // Try to list models using direct API call
+    // Initialize Gemini AI
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    // Convert history to OpenAI format
+    let modelToUse = null;
+
     try {
       const listResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
       const listData = await listResponse.json();
 
-      if (listData.models) {
+      if (listData.models && listData.models.length > 0) {
         console.log("Available models:", listData.models.map(m => m.name));
 
-        // Prioritize flash models (better quota) over pro models
-        const preferredModels = [
-          'models/gemini-2.5-flash',
-          'models/gemini-2.0-flash',
-          'models/gemini-flash-latest',
-          'models/gemini-2.0-flash-exp'
+        // Filter models that support generateContent
+        const compatibleModels = listData.models.filter(m =>
+          m.supportedGenerationMethods &&
+          m.supportedGenerationMethods.includes('generateContent')
+        );
+
+        // Prioritize flash models (better free tier quotas) over pro models
+        const preferredModelPatterns = [
+          /gemini-2\.0-flash(?!-thinking)/,  // gemini-2.0-flash (but not thinking models)
+          /gemini-2\.5-flash/,                // gemini-2.5-flash
+          /gemini-flash/,                     // generic flash
+          /gemini.*flash/,                    // any flash model
+          /gemini/                            // any gemini model
         ];
 
-        let contentModel = null;
-
-        // Try preferred models first
-        for (const preferredName of preferredModels) {
-          contentModel = listData.models.find(m =>
-            m.name === preferredName &&
-            m.supportedGenerationMethods &&
-            m.supportedGenerationMethods.includes('generateContent')
-          );
-          if (contentModel) break;
+        let selectedModel = null;
+        for (const pattern of preferredModelPatterns) {
+          selectedModel = compatibleModels.find(m => pattern.test(m.name));
+          if (selectedModel) break;
         }
 
-        // If no preferred model, use any available model
-        if (!contentModel) {
-          contentModel = listData.models.find(m =>
-            m.supportedGenerationMethods &&
-            m.supportedGenerationMethods.includes('generateContent')
-          );
-        }
-
-        if (contentModel) {
-          console.log("Using model:", contentModel.name);
-
-          // Extract just the model name (remove "models/" prefix if present)
-          const modelName = contentModel.name.replace('models/', '');
-
-          const genAI = new GoogleGenerativeAI(apiKey);
-          const model = genAI.getGenerativeModel({ model: modelName });
-          const result = await model.generateContent(message);
-          const response = await result.response;
-          const text = response.text();
-
-          return res.json({ ok: true, reply: text });
+        if (selectedModel) {
+          modelToUse = selectedModel.name.replace('models/', '');
+          console.log(`Using discovered model: ${modelToUse}`);
         }
       }
-
-      throw new Error("No compatible models found");
-    } catch (modelError) {
-      console.error("Model Error Details:", modelError.message);
-      throw modelError;
+    } catch (listError) {
+      console.error("Failed to list models:", listError.message);
     }
+
+    // Fallback to common model names if discovery failed
+    if (!modelToUse) {
+      console.log("Model discovery failed, trying fallback models");
+      const fallbackModels = ["gemini-pro", "gemini-1.5-pro", "gemini-1.5-flash"];
+      modelToUse = fallbackModels[0];
+    }
+
+    // Try to generate content with the selected model
+    const model = genAI.getGenerativeModel({ model: modelToUse });
+
+    // Build conversation history for context
+    let prompt = message;
+
+    if (history && Array.isArray(history) && history.length > 0) {
+      // Include recent conversation history for context
+      const contextMessages = history.slice(-6).map(msg => {
+        const role = msg.role === 'user' ? 'User' : 'Assistant';
+        const text = msg.parts?.[0]?.text || '';
+        return `${role}: ${text}`;
+      }).join('\n');
+
+      prompt = `Previous conversation:\n${contextMessages}\n\nUser: ${message}`;
+    }
+
+    // Add current user message
+    messages.push({
+      role: "user",
+      content: message
+    });
+
+    // Call OpenAI API
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 500
+    });
+
+    const reply = completion.choices[0]?.message?.content || "I couldn't generate a response.";
+
+    console.log("OpenAI response received");
+    return res.json({ ok: true, reply: reply });
+
   } catch (error) {
     console.error("Chat Error:", error);
-    res.status(500).json({ ok: false, reply: "I'm having trouble connecting to my brain right now. 🧠💥 Error: " + error.message });
+    const errorMessage = error.message || "Unknown error";
+    res.status(500).json({ ok: false, reply: "I'm having trouble connecting to my brain right now. 🧠💥 Error: " + errorMessage });
   }
 });
 
