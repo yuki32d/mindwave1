@@ -730,6 +730,24 @@ app.delete("/api/announcements/:id", authMiddleware, async (req, res) => {
 // Community Feature Endpoints
 // ============================================
 
+// Configure Multer for preserving extensions
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = 'uploads/';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir);
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // Keep original extension
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+const uploadWithExt = multer({ storage: storage });
+
 // Create a new community post
 app.post("/api/community/posts", authMiddleware, uploadWithExt.single('media'), async (req, res) => {
   try {
@@ -1402,22 +1420,7 @@ app.get("/api/materials/:subjectId", authMiddleware, async (req, res) => {
 });
 
 // Configure Multer for preserving extensions
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = 'uploads/';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    // Keep original extension
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
-  }
-});
-const uploadWithExt = multer({ storage: storage });
+
 
 app.post("/api/materials", authMiddleware, uploadWithExt.single('file'), async (req, res) => {
   if (req.user.role !== 'admin') {
